@@ -13,9 +13,9 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "prepare": "husky install",
-    "migrate:create": "node-pg-migrate create",
-    "migrate:up": "node-pg-migrate up",
-    "migrate:down": "node-pg-migrate down"
+    "migrate:create": "node-pg-migrate create --dir ./migrations --config-file migrate-config.js",
+    "migrate:up": "node-pg-migrate up --dir ./migrations --config-file migrate-config.js",
+    "migrate:down": "node-pg-migrate down --dir ./migrations --config-file migrate-config.js"
   },
   "keywords": [],
   "author": "",
@@ -23,12 +23,17 @@
   "dependencies": {
     "@atproto/api": "^0.14.2",
     "@atproto/oauth-client-node": "^0.2.11",
+    "@supabase/supabase-js": "^2.48.1",
+    "@types/cookie-parser": "^1.4.8",
+    "async-mutex": "^0.5.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
+    "nodemon": "^3.1.9",
     "pg": "^8.13.3",
     "zod": "^3.24.2"
   },
@@ -39,6 +44,7 @@
     "@types/jest": "^29.5.14",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.13.4",
+    "@types/node-pg-migrate": "^2.3.1",
     "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.24.1",
