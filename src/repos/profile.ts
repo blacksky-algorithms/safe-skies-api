@@ -1,13 +1,12 @@
 // src/repos/profile.ts
 import { db } from '../config/db';
 import { User } from '../lib/types/user';
-import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
+import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 
 import { buildFeedPermissions } from '../lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 
-interface ExtendedProfile extends ProfileViewBasic {
-  // match your table columns if you store associated, labels, etc.
+interface ExtendedProfile extends ProfileViewDetailed {
   associated?: any;
   labels?: any;
 }

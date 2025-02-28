@@ -65,21 +65,21 @@ export class StateStore {
    */
   async set(key: string, value: object) {
     try {
-      console.log(
-        `StateStore.set: Setting state for key: ${key} with value: ${JSON.stringify(value)}`
-      );
+      //   console.log(
+      //     `StateStore.set: Setting state for key: ${key} with value: ${JSON.stringify(value)}`
+      //   );
       const valueString = JSON.stringify(value);
       const { iv, encrypted } = encrypt(valueString);
       const encryptedState = JSON.stringify({ iv, encrypted });
-      console.log(`StateStore.set: Encrypted state: ${encryptedState}`);
+      //   console.log(`StateStore.set: Encrypted state: ${encryptedState}`);
 
       await db('auth_states')
         .insert({ key, state: encryptedState })
         .onConflict('key')
         .merge({ state: encryptedState });
-      console.log(`StateStore.set: State stored successfully for key: ${key}`);
+      //   console.log(`StateStore.set: State stored successfully for key: ${key}`);
     } catch (error) {
-      console.error('StateStore.set error:', error);
+      //   console.error('StateStore.set error:', error);
       throw error;
     }
   }

@@ -28,6 +28,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(sessionMiddleware);
 
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
 app.use('/auth', authRouter);
 app.use('/oauth', clientMetadataRouter);
 app.use('/feeds', feedsRouter);

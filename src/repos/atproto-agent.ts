@@ -6,7 +6,7 @@ class AtpAgentSingleton {
   public static getInstance(): AtpAgent {
     if (!AtpAgentSingleton.instance) {
       this.instance = new AtpAgent({
-        service: process.env.BASE_API_URL!,
+        service: process.env.BSKY_BASE_API_URL!,
       });
     }
     return this.instance;
