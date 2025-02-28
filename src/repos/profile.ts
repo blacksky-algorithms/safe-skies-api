@@ -70,7 +70,7 @@ export async function saveProfile(
 export async function getProfile(did: string): Promise<User | null> {
   try {
     const result = await db('profiles').select('*').where({ did }).first();
-
+    console.log('result', result);
     if (!result) return null;
 
     // If your 'profiles' table uses different column names than your User interface,

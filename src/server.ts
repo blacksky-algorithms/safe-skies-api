@@ -4,12 +4,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import sessionMiddleware from './config/session';
 
 import authRouter from './routes/auth';
 import clientMetadataRouter from './routes/clientMetadata';
 import feedsRouter from './routes/feeds';
 import devRouter from './routes/dev';
+import profileRouter from './routes/profile';
 
 dotenv.config();
 
@@ -26,16 +26,20 @@ app.use(
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
-app.use(sessionMiddleware);
 
 app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Incoming request: ${req.method} ${req.url}`);
+  }
   next();
 });
 
 app.use('/auth', authRouter);
 app.use('/oauth', clientMetadataRouter);
 app.use('/feeds', feedsRouter);
+
+app.use('/api', profileRouter);
+
 if (process.env.NODE_ENV === 'development') {
   app.use('/dev', devRouter);
 }

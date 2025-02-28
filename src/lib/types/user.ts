@@ -1,11 +1,5 @@
 import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
-import { UserRole } from '../types/permission';
-
-export interface FeedRoleInfo {
-  role: UserRole;
-  displayName: string;
-  uri: string;
-}
+import { FeedRoleInfo, UserRole } from '../types/permission';
 
 export interface User extends ProfileViewBasic {
   rolesByFeed: Record<string, FeedRoleInfo>;
