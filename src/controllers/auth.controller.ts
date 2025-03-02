@@ -15,7 +15,7 @@ const getActorFeeds = async (did: string) => {
     const feeds = await db('feed_permissions')
       .select({ name: 'feed_name' }, 'uri', 'role')
       .where({ did });
-    console.log(`getActorFeeds: Feeds for DID ${did}:`, feeds);
+
     return { feeds };
   } catch (error) {
     console.error('Error fetching actor feeds:', error);
@@ -29,23 +29,17 @@ const getActorFeeds = async (did: string) => {
 const getUsersBlueskyProfileData = async (
   oAuthCallbackParams: URLSearchParams
 ) => {
-  console.log('1. Getting OAuth callback session...');
   const { session } = await BlueskyOAuthClient.callback(oAuthCallbackParams);
-  console.log('OAuth session received:', {
-    sessionSub: session?.sub,
-    sessionDid: session?.did,
-  });
 
   if (!session?.sub) {
     throw new Error('Invalid session: No DID found.');
   }
 
-  console.log('2. Fetching profile with DID:', session.sub);
   try {
     const response = await AtprotoAgent.getProfile({
       actor: session.sub,
     });
-    console.log('Profile response:', response);
+
     if (!response.success || !response.data) {
       throw new Error('Failed to fetch profile data');
     }
@@ -67,9 +61,9 @@ export const signin = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Handle is required' });
       return;
     }
-    console.log(`signin: Initiating OAuth flow for handle: ${handle}`);
+
     const url = await BlueskyOAuthClient.authorize(handle as string);
-    console.log(`signin: Authorization URL: ${url}`);
+
     res.json({ url: url.toString() });
   } catch (err) {
     console.error('Error initiating Bluesky auth:', err);
@@ -87,7 +81,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     });
-    console.log('logout: Session cookie cleared.');
+
     res.json({ success: true, message: 'Logged out successfully' });
   } catch (err) {
     console.error('Error in logout:', err);
@@ -105,18 +99,14 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
  */
 export const callback = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('callback: Received OAuth callback with query:', req.query);
-
     // 1. Obtain initial profile data from Bluesky using OAuth callback parameters.
     const profileData = await getUsersBlueskyProfileData(
       new URLSearchParams(req.query as Record<string, string>)
     );
-    console.log('callback: Retrieved Bluesky profile data:', profileData);
 
     // 2. Retrieve local feed permissions for the user.
     const feedsResponse = await getActorFeeds(profileData.did);
     const createdFeeds = feedsResponse?.feeds || [];
-    console.log('callback: Retrieved local feed permissions:', createdFeeds);
 
     // 3. Build the initial user object merging local feed roles.
     const initialUser = {
@@ -131,21 +121,18 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
         {} as Record<string, FeedRoleInfo>
       ),
     };
-    console.log('callback: Initial user object:', initialUser);
 
     // 4. Upsert (save) the user profile along with feed permissions.
     const upsertSuccess = await saveProfile(initialUser, createdFeeds);
     if (!upsertSuccess) {
       throw new Error('Failed to save profile data');
     }
-    console.log('callback: Profile saved successfully.');
 
     // 5. Retrieve the complete profile (including any feed role updates).
     const completeProfile = await getProfile(profileData.did);
     if (!completeProfile) {
       throw new Error('Failed to retrieve complete profile');
     }
-    console.log('callback: Complete profile retrieved:', completeProfile);
 
     // 6. Create a session payload and sign a JWT.
     const sessionPayload: SessionPayload = {
@@ -161,17 +148,18 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
     const token = jwt.sign(sessionPayload, process.env.JWT_SECRET!, {
       expiresIn: '7d',
     });
-    console.log('Generated JWT token:', token);
     // 7. Set the JWT in a secure HTTP‑only cookie.
-    res.cookie('session_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-    });
+
+    // res.cookie('session_token', token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'none',
+    //   maxAge: 7 * 24 * 60 * 60 * 1000,
+    // });
+    // console.log('Set-Cookie header sent for session_token');
 
     // 8. Redirect the user back to the client.
-    res.redirect(`${process.env.CLIENT_URL}`);
+    res.redirect(`${process.env.CLIENT_URL}/oauth/callback?token=${token}`);
   } catch (err) {
     console.error('OAuth callback error:', err);
     const errorMessage =

@@ -5,6 +5,7 @@ import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/act
 
 import { buildFeedPermissions } from '../lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
+import { getEnrichedFeedsForUser } from './feedHelpers';
 
 interface ExtendedProfile extends ProfileViewDetailed {
   associated?: any;
@@ -70,7 +71,7 @@ export async function saveProfile(
 export async function getProfile(did: string): Promise<User | null> {
   try {
     const result = await db('profiles').select('*').where({ did }).first();
-    console.log('result', result);
+
     if (!result) return null;
 
     // If your 'profiles' table uses different column names than your User interface,
@@ -109,3 +110,21 @@ export async function upsertProfile(profile: Partial<User>): Promise<boolean> {
     return false;
   }
 }
+
+export const getEnrichedProfile = async (did: string) => {
+  // 1. Retrieve the basic profile.
+  const profile = await getProfile(did);
+  if (!profile) {
+    throw new Error('Profile not found');
+  }
+
+  // 2. Retrieve enriched feed data.
+  const feedsData = await getEnrichedFeedsForUser(did);
+
+  // 3. Combine both into one object.
+  return {
+    ...profile,
+    rolesByFeed: feedsData.feeds,
+    defaultFeed: feedsData.defaultFeed,
+  };
+};
