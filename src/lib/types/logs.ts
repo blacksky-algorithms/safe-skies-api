@@ -1,5 +1,5 @@
-import { ModAction } from '@/lib/types/moderation';
 import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
+import { ModAction } from './moderation';
 
 export interface Log {
   id: string;
@@ -39,3 +39,5 @@ export interface LogEntry {
   ip_address?: string | null;
   user_agent?: string | null;
 }
+
+export type FilteredLogEntry = Omit<LogEntry, 'performed_by'>;

@@ -74,8 +74,6 @@ export async function getProfile(did: string): Promise<User | null> {
 
     if (!result) return null;
 
-    // If your 'profiles' table uses different column names than your User interface,
-    // map them here if necessary. Otherwise, just cast directly:
     return result as User;
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -89,16 +87,13 @@ export async function upsertProfile(profile: Partial<User>): Promise<boolean> {
     const dbProfile: Record<string, any> = {
       did: profile.did,
       handle: profile.handle,
-      display_name: profile.displayName, // store "displayName" in "display_name"
+      display_name: profile.displayName,
       avatar: profile.avatar,
-      // Put rolesByFeed in the associated JSON if you want to preserve it
       associated: {
         ...(profile.associated || {}),
         rolesByFeed: profile.rolesByFeed || {},
       },
-      // If you have separate 'labels' field, map that too
       labels: profile.labels || null,
-      // "created_at" is set by default in migrations if needed
     };
 
     // Perform UPSERT using did as the conflict key

@@ -10,6 +10,8 @@ import clientMetadataRouter from './routes/clientMetadata';
 import feedsRouter from './routes/feeds';
 import devRouter from './routes/dev';
 import profileRouter from './routes/profile';
+import permissionsRouter from './routes/permissions';
+import logsRouter from './routes/logs';
 
 dotenv.config();
 
@@ -39,6 +41,9 @@ app.use('/oauth', clientMetadataRouter);
 app.use('/feeds', feedsRouter);
 
 app.use('/api', profileRouter);
+app.use('/api/permissions', permissionsRouter);
+
+app.use('/api/logs', logsRouter);
 
 if (process.env.NODE_ENV === 'development') {
   app.use('/dev', devRouter);
