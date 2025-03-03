@@ -1,6 +1,6 @@
 // src/controllers/logs.controller.ts
 import { Request, Response } from 'express';
-import { LogFilters, LogEntry } from '../lib/types/logs';
+import { LogFilters, LogEntry, FilteredLogEntry } from '../lib/types/logs';
 import { getLogs } from '../repos/logs';
 import { db } from '../config/db'; // Knex instance
 import { ModAction } from '../lib/types/moderation';
@@ -85,7 +85,7 @@ export const getLogsController = async (
     };
 
     // Fetch logs.
-    let logs: LogEntry[] = await getLogs(filters);
+    let logs = await getLogs(filters);
 
     // For moderators, filter logs to only show allowed actions and remove the performed_by field.
     if (role === 'mod') {

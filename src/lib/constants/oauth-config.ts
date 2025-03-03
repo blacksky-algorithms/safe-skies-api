@@ -38,13 +38,3 @@ export const BLUE_SKY_CLIENT_META_DATA: OAuthClientMetadataInput = {
   token_endpoint_auth_method: 'none',
   dpop_bound_access_tokens: true,
 };
-
-// export const SESSION_CONFIG = {
-//   cookieName: 'bsky-session',
-//   password: process.env.SESSION_SECRET!,
-//   cookieOptions: {
-//     secure: process.env.NODE_ENV === 'production',
-//     httpOnly: true,
-//     sameSite: 'lax' as const,
-//   },
-// };

@@ -131,7 +131,7 @@ PGPORT=5432
 ENCRYPTION_KEY=your_base64_encoded_32_byte_key
 
 NEXT_PUBLIC_URL=https://your-backend-url.com
-BASE_API_URL=https://bsky.social
+BS_BASE_URL=https://bsky.social
 
 CLIENT_URL=https://your-frontend-url.com
 ```

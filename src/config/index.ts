@@ -12,7 +12,7 @@ const envSchema = z.object({
   PGHOST: z.string(),
   PGDATABASE: z.string(),
   ENCRYPTION_KEY: z.string().min(32),
-  BASE_API_URL: z.enum(['https://bsky.social']),
+  BS_BASE_URL: z.enum(['https://bsky.social']),
   CLIENT_URL: z.string(),
   PORT: z.string().transform(Number),
 });
