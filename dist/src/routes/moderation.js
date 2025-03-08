@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const moderation_controller_1 = require("../controllers/moderation.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const router = (0, express_1.Router)();
+router.get('/report-options', moderation_controller_1.getReportOptions);
+router.get('/services', auth_middleware_1.authenticateJWT, moderation_controller_1.getModerationServices);
+router.post('/report', auth_middleware_1.authenticateJWT, moderation_controller_1.reportModerationEvents);
+exports.default = router;
