@@ -97,36 +97,25 @@ export async function createModerationLog(log: {
     throw error;
   }
 }
-// export async function createModerationLog(log: {
-//   uri: string;
-//   performed_by: string;
-//   action: ModAction;
-//   target_user_did: string;
-//   target_post_uri?: string;
-//   reason?: string;
-//   to_services?: string[];
-//   metadata: any;
-// }): Promise<void> {
-//   try {
-//     const res = await db('logs').insert({
-//       id: db.raw('gen_random_uuid()'),
-//       uri: log.uri,
-//       performed_by: log.performed_by,
-//       action: log.action,
-//       target_user_did: log.target_user_did,
-//       target_post_uri: log.target_post_uri,
-//       reason: log.reason,
-//       to_services: log.to_services,
-//       metadata: JSON.stringify(log.metadata),
-//       created_at: new Date().toISOString(),
-//     });
-//     console.log('logs res', res);
-//   } catch (error) {
-//     console.log('logs error');
-//     console.error('Error creating moderation log:', error);
-//   }
-// }
-
+/**
+ * Retrieves the current role for a user on a given feed.
+ * Since roles are defined per feed, we query the feed_permissions table.
+ */
+export async function getUserRoleForFeed(
+  userDid: string,
+  uri: string
+): Promise<'admin' | 'mod' | 'user'> {
+  try {
+    const row = await db('feed_permissions')
+      .select('role')
+      .where({ did: userDid, uri })
+      .first();
+    return row ? row.role : 'user';
+  } catch (error) {
+    console.error('Error in getUserRoleForFeed:', error);
+    return 'user';
+  }
+}
 /**
  * Upserts a feed permission record for a target user.
  * It first checks whether the target user's profile exists (and creates one if necessary),

@@ -1,35 +1,7 @@
 // src/repos/logs.ts
 import { db } from '../config/db';
-import { LogFilters } from '../lib/types/logs';
+import { LogEntry, LogFilters } from '../lib/types/logs';
 import { ModAction } from '../lib/types/moderation';
-
-export interface LogEntry {
-  id: string;
-  uri: string;
-  performed_by: string;
-  action: string;
-  target_post_uri?: string;
-  target_user_did?: string;
-  metadata?: any;
-  created_at: string;
-  ip_address?: string;
-  user_agent?: string;
-  reason?: string;
-  to_services?: string[];
-  // Additional fields for joined profile data:
-  performed_by_profile?: {
-    did: string;
-    handle: string;
-    display_name?: string;
-    avatar?: string;
-  };
-  target_user_profile?: {
-    did: string;
-    handle: string;
-    display_name?: string;
-    avatar?: string;
-  };
-}
 
 export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
   // Build the query

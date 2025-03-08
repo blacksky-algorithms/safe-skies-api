@@ -2,28 +2,8 @@
 import { Request, Response } from 'express';
 import { LogFilters } from '../lib/types/logs';
 import { getLogs } from '../repos/logs';
-import { db } from '../config/db'; // Knex instance
 import { ModAction } from '../lib/types/moderation';
-
-/**
- * Retrieves the current role for a user on a given feed.
- * Since roles are defined per feed, we query the feed_permissions table.
- */
-async function getUserRoleForFeed(
-  userDid: string,
-  uri: string
-): Promise<'admin' | 'mod' | 'user'> {
-  try {
-    const row = await db('feed_permissions')
-      .select('role')
-      .where({ did: userDid, uri })
-      .first();
-    return row ? row.role : 'user';
-  } catch (error) {
-    console.error('Error in getUserRoleForFeed:', error);
-    return 'user';
-  }
-}
+import { getUserRoleForFeed } from '../repos/permissions';
 
 /**
  * GET /api/logs

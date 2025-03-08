@@ -1,4 +1,3 @@
-// src/controllers/profile.controller.ts
 import { Request, Response } from 'express';
 import { getEnrichedProfile } from '../repos/profile';
 
