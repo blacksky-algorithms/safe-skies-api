@@ -1,7 +1,5 @@
 import { UserRole } from '../types/permission';
 
-export const CONTENT_LABELS = ['porn', 'sexual', 'nudity', 'graphic-media'];
-
 export const preferredLanguages = 'en-US, en';
 
 export const ROLE_PRIORITY = {

@@ -32,6 +32,7 @@ export interface LogEntry {
 }
 
 export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
+  // Build the query
   const query = db('logs')
     .select(
       'logs.*',
@@ -47,6 +48,7 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
     .leftJoin('profiles as p1', 'logs.performed_by', 'p1.did')
     .leftJoin('profiles as p2', 'logs.target_user_did', 'p2.did');
 
+  // Apply filters if provided
   if (filters.uri) {
     query.where('logs.uri', filters.uri);
   }
@@ -71,8 +73,15 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
     filters.sortBy === 'ascending' ? 'asc' : 'desc'
   );
 
+  // Debug: log the built query SQL for inspection.
+  console.log('Executing query:', query.toString());
+
   const rows = await query;
-  // Map rows to include joined profile data.
+  console.log('Executing query:', query.toString());
+  // Debug: log raw rows returned from the query.
+  console.log('Raw log rows:');
+
+  // Map rows to LogEntry objects with joined profile data.
   const logs: LogEntry[] = rows.map((row: any) => ({
     id: row.id,
     uri: row.uri,
@@ -103,6 +112,12 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
         }
       : undefined,
   }));
+
+  // Debug: log the mapped log entries.
+  console.log(
+    'Mapped log entries:',
+    logs.map((log) => log.action)
+  );
 
   return logs;
 }

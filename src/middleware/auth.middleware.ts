@@ -33,7 +33,6 @@ export const authenticateJWT = (
 
     // Attach the decoded user data to the request object
     req.user = decoded;
-
     next();
   } catch (error) {
     console.error('Token verification failed:', error);

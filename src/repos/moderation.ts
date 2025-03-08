@@ -1,5 +1,5 @@
 import { db } from '../config/db';
-import { ReportOption } from '../lib/types/moderation';
+import { ReportOption, ModerationService } from '../lib/types/moderation';
 
 export async function fetchReportOptions(): Promise<ReportOption[]> {
   try {
@@ -37,4 +37,14 @@ export async function reportToBlacksky(uris: { uri: string }[]) {
 
 export async function reportToOzone() {
   // todo
+}
+
+export async function fetchModerationServices(): Promise<ModerationService[]> {
+  try {
+    const services = await db('moderation_services').select('*');
+    return services;
+  } catch (error) {
+    console.error('Error fetching moderation services:', error);
+    throw error;
+  }
 }

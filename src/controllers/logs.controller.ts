@@ -58,6 +58,7 @@ export const getLogsController = async (
 
     // Determine the user's role for this feed.
     const role = await getUserRoleForFeed(userDid, uri);
+    console.log({ role });
     if (role === 'user') {
       res
         .status(403)

@@ -1,6 +1,6 @@
 // src/repos/permission.ts
 import { db } from '../config/db';
-import { ModAction, ModByFeed } from '../lib/types/moderation';
+import { ModAction } from '../lib/types/moderation';
 import { UserRole } from '../lib/types/permission';
 import { ModeratorData } from '../lib/types/user';
 import {
@@ -52,22 +52,63 @@ export async function createModerationLog(log: {
   performed_by: string;
   action: ModAction;
   target_user_did: string;
+  target_post_uri?: string;
+  reason?: string;
+  to_services?: string[];
   metadata: any;
 }): Promise<void> {
   try {
-    await db('logs').insert({
+    console.log(
+      'Inserting moderation log with data:',
+      JSON.stringify(log, null, 2)
+    );
+    const result = await db('logs').insert({
       id: db.raw('gen_random_uuid()'),
       uri: log.uri,
       performed_by: log.performed_by,
       action: log.action,
       target_user_did: log.target_user_did,
+      target_post_uri: log.target_post_uri,
+      reason: log.reason,
+      to_services: log.to_services,
       metadata: JSON.stringify(log.metadata),
       created_at: new Date().toISOString(),
     });
+    console.log('Database insertion result for moderation log:', result);
   } catch (error) {
     console.error('Error creating moderation log:', error);
+    throw error;
   }
 }
+// export async function createModerationLog(log: {
+//   uri: string;
+//   performed_by: string;
+//   action: ModAction;
+//   target_user_did: string;
+//   target_post_uri?: string;
+//   reason?: string;
+//   to_services?: string[];
+//   metadata: any;
+// }): Promise<void> {
+//   try {
+//     const res = await db('logs').insert({
+//       id: db.raw('gen_random_uuid()'),
+//       uri: log.uri,
+//       performed_by: log.performed_by,
+//       action: log.action,
+//       target_user_did: log.target_user_did,
+//       target_post_uri: log.target_post_uri,
+//       reason: log.reason,
+//       to_services: log.to_services,
+//       metadata: JSON.stringify(log.metadata),
+//       created_at: new Date().toISOString(),
+//     });
+//     console.log('logs res', res);
+//   } catch (error) {
+//     console.log('logs error');
+//     console.error('Error creating moderation log:', error);
+//   }
+// }
 
 /**
  * Upserts a feed permission record for a target user.
@@ -260,4 +301,10 @@ export async function getAllModeratorsForAdmin(
     console.error('Error fetching moderators for admin:', error);
     throw error;
   }
+}
+
+// Placeholder gate function for Blacksky service.
+export function blackskyServiceGate(): boolean {
+  // Replace with your actual logic later.
+  return false;
 }
