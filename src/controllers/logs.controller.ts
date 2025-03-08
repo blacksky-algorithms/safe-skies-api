@@ -1,6 +1,6 @@
 // src/controllers/logs.controller.ts
 import { Request, Response } from 'express';
-import { LogFilters, LogEntry, FilteredLogEntry } from '../lib/types/logs';
+import { LogFilters } from '../lib/types/logs';
 import { getLogs } from '../repos/logs';
 import { db } from '../config/db'; // Knex instance
 import { ModAction } from '../lib/types/moderation';

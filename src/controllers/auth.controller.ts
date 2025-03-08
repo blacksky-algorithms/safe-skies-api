@@ -148,17 +148,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
     const token = jwt.sign(sessionPayload, process.env.JWT_SECRET!, {
       expiresIn: '7d',
     });
-    // 7. Set the JWT in a secure HTTP‑only cookie.
-
-    // res.cookie('session_token', token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'none',
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    // });
-    // console.log('Set-Cookie header sent for session_token');
-
-    // 8. Redirect the user back to the client.
+    // 7. Redirect the user back to the client.
     res.redirect(`${process.env.CLIENT_URL}/oauth/callback?token=${token}`);
   } catch (err) {
     console.error('OAuth callback error:', err);

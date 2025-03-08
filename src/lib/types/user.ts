@@ -8,7 +8,7 @@ export interface User extends ProfileViewBasic {
 export interface ModeratorData {
   did: string;
   uri: string;
-  feed_name: string;
+  feed_name?: string;
   role: UserRole;
-  profiles: ProfileViewBasic;
+  profile: ProfileViewBasic;
 }

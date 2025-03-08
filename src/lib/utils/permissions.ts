@@ -1,4 +1,7 @@
+import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 import { UserRole } from '../types/permission';
+import { ModAction } from '../types/moderation';
+import { getProfile } from '../../repos/profile';
 
 interface Feed {
   uri: string;
@@ -51,4 +54,67 @@ export function buildFeedPermissions(
     feed_name: perm.feed_name,
     role: perm.role,
   }));
+}
+
+export const groupModeratorsByFeed = (
+  permissions: {
+    uri: string;
+    user_did: string;
+    role: UserRole;
+  }[]
+) => {
+  return permissions.reduce(
+    (acc, perm) => {
+      if (!acc[perm.uri]) {
+        acc[perm.uri] = [];
+      }
+      acc[perm.uri].push(perm);
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        uri: string;
+        user_did: string;
+        role: UserRole;
+        feed_name?: string;
+      }[]
+    >
+  );
+};
+
+export const getBulkProfileDetails = async (
+  userDids: string[]
+): Promise<ProfileViewBasic[]> => {
+  // Deduplicate DIDs
+  const uniqueDids = [...new Set(userDids)];
+
+  // Get all profiles in parallel
+  const profiles = await Promise.all(uniqueDids.map((did) => getProfile(did)));
+
+  // Map back to original order
+  return userDids.map(
+    (did) =>
+      profiles.find((profile) => profile?.did === did) || { did, handle: did }
+  );
+};
+
+/**
+ * Determines if a user with a given role can perform the specified moderation action.
+ */
+export function canPerformWithRole(role: UserRole, action: ModAction): boolean {
+  switch (action) {
+    // Only admins may promote or demote moderators, ban or unban users.
+    case 'mod_promote':
+    case 'mod_demote':
+    case 'user_unban':
+    case 'user_ban':
+      return role === 'admin';
+    // For post deletion or restoration, mods and admins are allowed.
+    case 'post_delete':
+    case 'post_restore':
+      return role === 'mod' || role === 'admin';
+    default:
+      return false;
+  }
 }

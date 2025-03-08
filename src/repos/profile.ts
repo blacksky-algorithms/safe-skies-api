@@ -91,7 +91,7 @@ export async function upsertProfile(profile: Partial<User>): Promise<boolean> {
       avatar: profile.avatar,
       associated: {
         ...(profile.associated || {}),
-        rolesByFeed: profile.rolesByFeed || {},
+        rolesByFeed: profile.rolesByFeed || [],
       },
       labels: profile.labels || null,
     };
