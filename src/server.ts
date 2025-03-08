@@ -12,6 +12,7 @@ import devRouter from './routes/dev';
 import profileRouter from './routes/profile';
 import permissionsRouter from './routes/permissions';
 import logsRouter from './routes/logs';
+import moderationRouter from './routes/moderation';
 
 dotenv.config();
 
@@ -44,6 +45,8 @@ app.use('/api', profileRouter);
 app.use('/api/permissions', permissionsRouter);
 
 app.use('/api/logs', logsRouter);
+
+app.use('/api/moderation', moderationRouter);
 
 if (process.env.NODE_ENV === 'development') {
   app.use('/dev', devRouter);

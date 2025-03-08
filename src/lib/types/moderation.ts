@@ -21,3 +21,10 @@ export type ModAction =
 export interface ModByFeed extends ProfileViewBasic {
   role: UserRole;
 }
+
+export interface ReportOption {
+  id: string;
+  title: string;
+  description: string;
+  reason: string;
+}
