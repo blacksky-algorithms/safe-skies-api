@@ -1,4 +1,3 @@
-// src/repos/profile.ts
 import { db } from '../config/db';
 import { User } from '../lib/types/user';
 import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
@@ -13,8 +12,7 @@ interface ExtendedProfile extends ProfileViewDetailed {
 }
 
 /**
- * Saves (upserts) a user's basic profile data and feed permissions,
- * mirroring the old Next "saveProfile" approach.
+ * Saves (upserts) a user's basic profile data and feed permissions
  */
 export async function saveProfile(
   blueSkyProfileData: ExtendedProfile,
@@ -27,7 +25,6 @@ export async function saveProfile(
         did: blueSkyProfileData.did,
         handle: blueSkyProfileData.handle,
         avatar: blueSkyProfileData.avatar,
-        // If your table uses "display_name" for "displayName"
         display_name: blueSkyProfileData.displayName,
         associated: blueSkyProfileData.associated || null,
         labels: blueSkyProfileData.labels || null,
@@ -41,19 +38,20 @@ export async function saveProfile(
         labels: blueSkyProfileData.labels || null,
       });
 
-    // 2. Build feed permissions for newly created feeds
-    // If you want to merge existing feed perms, fetch them first
-    // e.g., const existingPermissions = await db('feed_permissions').where({ user_did: blueSkyProfileData.did });
-    // Then pass existingPermissions into buildFeedPermissions
+    // 2. Fetch existing feed permissions for this user
+    const existingPermissions = await db('feed_permissions')
+      .select('uri', 'feed_name', 'role')
+      .where({ did: blueSkyProfileData.did });
+
+    // 3. Build feed permissions, merging with existing ones
     const feedPermissions = buildFeedPermissions(
       blueSkyProfileData.did,
       createdFeeds,
-      /* existingPermissions */ []
+      existingPermissions
     );
 
-    // 3. Upsert new feed permissions
+    // 4. Upsert new feed permissions
     if (feedPermissions.length > 0) {
-      // If your table uses (did, uri) or (user_did, uri) as the unique conflict, adjust accordingly
       await db('feed_permissions')
         .insert(feedPermissions)
         .onConflict(['did', 'uri'])
@@ -66,7 +64,6 @@ export async function saveProfile(
     return false;
   }
 }
-
 // getProfile fetches a user by DID from the 'profiles' table
 export async function getProfile(did: string): Promise<User | null> {
   try {

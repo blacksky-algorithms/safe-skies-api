@@ -2,6 +2,7 @@ import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/
 import { UserRole } from '../types/permission';
 import { ModAction } from '../types/moderation';
 import { getProfile } from '../../repos/profile';
+import { ROLE_PRIORITY } from '../constants/permission';
 
 interface Feed {
   uri: string;
@@ -41,9 +42,14 @@ export const buildFeedPermissions = (
         role: defaultRole,
       });
     } else {
-      // If existing role is 'user', we can raise it to admin if you want
-      // Or preserve 'mod' if it’s “higher.” Adjust logic as you see fit
-      // e.g., if ROLE_PRIORITY[existing.role] < ROLE_PRIORITY['admin'], then upgrade
+      // Only upgrade role if the new one has higher priority
+      if (ROLE_PRIORITY[existing.role] < ROLE_PRIORITY[defaultRole]) {
+        existing.role = defaultRole;
+      }
+      // Always update the feed_name if available
+      if (feed.displayName) {
+        existing.feed_name = feed.displayName;
+      }
     }
   }
 
