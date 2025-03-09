@@ -1,21 +1,6 @@
 import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 import { ModAction } from './moderation';
 
-export interface Log {
-  id: string;
-  uri: string;
-  performed_by: string;
-  action: ModAction;
-  target_post_uri: string | null;
-  target_user_did: string | null;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  ip_address?: string | null;
-  user_agent?: string | null;
-  performed_by_profile: ProfileViewBasic;
-  target_user_profile?: ProfileViewBasic;
-}
-
 export interface LogEntry {
   id: string;
   uri: string;

@@ -2,7 +2,7 @@ import { db } from '../config/db';
 
 import { DEFAULT_FEED } from '../lib/constants';
 import { UserRole } from '../lib/types/permission';
-import { getActorFeedsData } from './atproto-agent';
+import { getActorFeedsData } from './atproto';
 
 /**
  * Fetches feeds for a given user (did) with a specific role ('mod' or 'admin').
@@ -24,10 +24,6 @@ export const getFeedsByRole = async (
 };
 
 /**
- * Combines local feed permissions with Bluesky feed data
- * and returns an enriched feed object.
- */
-/**
  * Returns enriched feed data for a user by merging local permissions with Bluesky data.
  */
 export async function getEnrichedFeedsForUser(userDid: string): Promise<{
@@ -46,7 +42,6 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     type: UserRole;
   };
 }> {
-  // Retrieve local feed permissions for both mod and admin roles.
   const [modFeeds, adminFeeds] = await Promise.all([
     getFeedsByRole(userDid, 'mod'),
     getFeedsByRole(userDid, 'admin'),
@@ -80,7 +75,7 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     };
   });
 
-  // Optionally update the local DB if the display names differ.
+  // Update the DB if the display names differ.
   const updatePromises = [...modFeeds, ...adminFeeds].map(async (feed) => {
     const bsFeed = blueskyFeedsMap.get(feed.uri);
     if (bsFeed && bsFeed.displayName !== feed.feed_name) {
@@ -89,6 +84,7 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
         .update({ feed_name: bsFeed.displayName });
     }
   });
+
   await Promise.all(updatePromises);
 
   // Combine both lists and remove duplicates by URI.

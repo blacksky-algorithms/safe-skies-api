@@ -1,10 +1,8 @@
-// src/controllers/permissions.controller.ts
 import { Request, Response } from 'express';
-import { SessionPayload } from '../lib/types/session';
 import {
   canPerformAction,
-  getAllModeratorsForAdmin,
-  getModeratorsByFeeds,
+  fetchModsForAdminFeeds,
+  fetchFeedModsWithProfiles,
   setFeedRole,
   getFeedRole,
 } from '../repos/permissions';
@@ -14,26 +12,24 @@ export const promoteModerator = async (
   res: Response
 ): Promise<void> => {
   try {
-    // The authentication middleware should have set req.user.
-    const actingUser = req.user as SessionPayload;
+    const actingUser = req.user;
     if (!actingUser) {
       res.status(401).json({ error: 'Unauthorized: No valid session' });
       return;
     }
 
-    // Extract required fields from the request body.
     const { targetUserDid, uri, feedName } = req.body;
     if (!targetUserDid || !uri || !feedName) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
 
-    // Check if the acting user can perform a promotion.
     const hasPermission = await canPerformAction(
       actingUser.did,
       'mod_promote',
       uri
     );
+
     if (!hasPermission) {
       res
         .status(403)
@@ -41,7 +37,6 @@ export const promoteModerator = async (
       return;
     }
 
-    // Update the role for the target user to "mod".
     const success = await setFeedRole(
       targetUserDid,
       uri,
@@ -66,21 +61,18 @@ export const demoteModerator = async (
   res: Response
 ): Promise<void> => {
   try {
-    // The authentication middleware should have set req.user.
-    const actingUser = req.user as SessionPayload;
+    const actingUser = req.user;
     if (!actingUser) {
       res.status(401).json({ error: 'Unauthorized: No valid session' });
       return;
     }
 
-    // Extract required fields from the request body.
     const { modDid, uri, feedName } = req.body;
     if (!modDid || !uri || !feedName) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
 
-    // Check if the acting user can perform a demotion.
     const hasPermission = await canPerformAction(
       actingUser.did,
       'mod_demote',
@@ -93,7 +85,6 @@ export const demoteModerator = async (
       return;
     }
 
-    // Update the role for the target moderator to "user".
     const success = await setFeedRole(
       modDid,
       uri,
@@ -101,6 +92,7 @@ export const demoteModerator = async (
       actingUser.did,
       feedName
     );
+
     if (!success) {
       res.status(500).json({ error: 'Failed to demote moderator' });
       return;
@@ -125,7 +117,7 @@ export const listModerators = async (
   res: Response
 ): Promise<void> => {
   try {
-    const actingUser = req.user as SessionPayload;
+    const actingUser = req.user;
     if (!actingUser) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
@@ -133,24 +125,20 @@ export const listModerators = async (
 
     const feedParam = req.query.feed;
     if (feedParam && typeof feedParam === 'string') {
-      // Verify the acting user is an admin for the requested feed.
       const actingUserRole = await getFeedRole(actingUser.did, feedParam);
       if (actingUserRole !== 'admin') {
-        res
-          .status(403)
-          .json({
-            error:
-              'Insufficient permissions: Only admins can view moderators for this feed.',
-          });
+        res.status(403).json({
+          error:
+            'Insufficient permissions: Only admins can view moderators for this feed.',
+        });
         return;
       }
-      // If the acting user is admin, get the moderators for that feed.
-      const result = await getModeratorsByFeeds([{ uri: feedParam }]);
+
+      const result = await fetchFeedModsWithProfiles([{ uri: feedParam }]);
       const moderators = result.length ? result[0].moderators : [];
       res.json({ moderators });
     } else {
-      // No feed provided – list moderators for all feeds where the acting user has admin privileges.
-      const moderators = await getAllModeratorsForAdmin(actingUser.did);
+      const moderators = await fetchModsForAdminFeeds(actingUser.did);
       res.json({ moderators });
     }
   } catch (error) {
@@ -164,14 +152,12 @@ export const checkFeedRole = async (
   res: Response
 ): Promise<void> => {
   try {
-    // Ensure the acting user is authenticated.
-    const actingUser = req.user as SessionPayload;
+    const actingUser = req.user;
     if (!actingUser) {
       res.status(401).json({ error: 'Unauthorized: No valid session' });
       return;
     }
 
-    // Extract query parameters.
     const { targetDid, uri } = req.query;
     if (
       !targetDid ||
@@ -185,7 +171,6 @@ export const checkFeedRole = async (
       return;
     }
 
-    // Verify that the acting user has admin privileges on the feed.
     const actingUserRole = await getFeedRole(actingUser.did, uri);
     if (actingUserRole !== 'admin') {
       res.status(403).json({
@@ -194,7 +179,6 @@ export const checkFeedRole = async (
       return;
     }
 
-    // Retrieve the role for the target user on the specified feed.
     const targetUserRole = await getFeedRole(targetDid, uri);
     res.json({ role: targetUserRole });
   } catch (error) {

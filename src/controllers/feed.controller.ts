@@ -11,7 +11,6 @@ export const getUserFeeds = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  // Extract the user DID from query parameters.
   const userDid = req.query.userDid as string;
   if (!userDid) {
     res.json({ feeds: [], defaultFeed: DEFAULT_FEED });
@@ -19,7 +18,6 @@ export const getUserFeeds = async (
   }
 
   try {
-    // Delegate the heavy lifting to the repository function.
     const data = await getEnrichedFeedsForUser(userDid);
     res.json(data);
   } catch (error) {

@@ -1,13 +1,12 @@
 // src/controllers/dev.controller.ts
 
 import { Request, Response } from 'express';
-import { AtprotoAgent, getActorFeeds } from '../repos/atproto-agent';
+import { AtprotoAgent, getActorFeeds } from '../repos/atproto';
 import { saveProfile } from '../repos/profile';
 import { getProfile } from '../repos/profile';
 
 export const devLogin = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Dev login request body:', req.body);
     const { accessToken, profile_did } = req.body;
 
     if (!accessToken || !profile_did) {

@@ -1,4 +1,3 @@
-// src/controllers/logs.controller.ts
 import { Request, Response } from 'express';
 import { LogFilters } from '../lib/types/logs';
 import { getLogs } from '../repos/logs';
@@ -19,7 +18,6 @@ export const getLogsController = async (
   res: Response
 ): Promise<void> => {
   try {
-    // req.user is set by the authentication middleware.
     const sessionPayload = req.user;
     if (!sessionPayload) {
       res.status(401).json({ error: 'Not authenticated' });
@@ -38,7 +36,7 @@ export const getLogsController = async (
 
     // Determine the user's role for this feed.
     const role = await getUserRoleForFeed(userDid, uri);
-    console.log({ role });
+
     if (role === 'user') {
       res
         .status(403)

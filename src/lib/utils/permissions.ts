@@ -14,11 +14,11 @@ interface ExistingPermission {
   role: UserRole;
 }
 
-export function buildFeedPermissions(
+export const buildFeedPermissions = (
   userDid: string,
   createdFeeds: Feed[],
   existingPermissions: ExistingPermission[] = []
-) {
+) => {
   const permissionsMap = new Map<string, ExistingPermission>();
 
   // Convert existing permissions array into a Map keyed by URI
@@ -54,7 +54,7 @@ export function buildFeedPermissions(
     feed_name: perm.feed_name,
     role: perm.role,
   }));
-}
+};
 
 export const groupModeratorsByFeed = (
   permissions: {
@@ -102,19 +102,20 @@ export const getBulkProfileDetails = async (
 /**
  * Determines if a user with a given role can perform the specified moderation action.
  */
-export function canPerformWithRole(role: UserRole, action: ModAction): boolean {
+export const canPerformWithRole = (
+  role: UserRole,
+  action: ModAction
+): boolean => {
   switch (action) {
-    // Only admins may promote or demote moderators, ban or unban users.
     case 'mod_promote':
     case 'mod_demote':
     case 'user_unban':
     case 'user_ban':
       return role === 'admin';
-    // For post deletion or restoration, mods and admins are allowed.
     case 'post_delete':
     case 'post_restore':
       return role === 'mod' || role === 'admin';
     default:
       return false;
   }
-}
+};

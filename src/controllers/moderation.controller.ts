@@ -29,19 +29,14 @@ export const getModerationServices = async (
   res: Response
 ): Promise<void> => {
   try {
-    // Ensure the acting user is authenticated.
     const actingUser = req.user;
     if (!actingUser) {
       res.status(401).json({ error: 'Unauthorized: No valid session' });
       return;
     }
 
-    // Fetch all available moderation services.
     const allServices = await fetchModerationServices();
 
-    // Filter services:
-    // - If the acting user is mod/admin for the feed and the gate passes, include Blacksky.
-    // - Otherwise, only include Ozone.
     const services = allServices.filter((service) => {
       if (service.value === 'blacksky') {
         return blackskyServiceGate();
@@ -49,7 +44,6 @@ export const getModerationServices = async (
       if (service.value === 'ozone') {
         return true;
       }
-      // If additional services exist, add your logic here.
       return false;
     });
 
@@ -62,23 +56,6 @@ export const getModerationServices = async (
 
 /**
  * Processes a bulk array of moderation reports. For each report, we:
- * - Use the authenticated user's DID as performed_by.
- * - Process the report for each service (Blacksky and/or Ozone).
- * - Create a moderation log entry.
- * - Return a summary of successes and failures so one report’s error
- *   doesn’t block processing of the others.
- *
- * Each report object is expected to have:
- * {
- *   targetedPostUri: string;
- *   reason: string;
- *   toServices: { label: string; value: string }[];
- *   targetedUserDid: string;
- *   uri: string;
- *   feedName?: string;
- *   additionalInfo?: string;
- *   action: ModAction;
- * }
  */
 export const reportModerationEvents = async (
   req: Request,
@@ -96,31 +73,27 @@ export const reportModerationEvents = async (
     // Ensure the request body is an array. If not, wrap it.
     let reports = req.body;
     if (!Array.isArray(reports)) {
-      console.warn('Request body is not an array. Wrapping in an array.');
       reports = [reports];
     }
 
-    // Process each report individually.
     const summary = await Promise.all(
       reports.map(async (report: any, idx: number) => {
-        // Build the payload.
         const payload = {
           targetedPostUri: report.targetedPostUri,
           reason: report.reason,
-          toServices: report.toServices, // Expects an array of ModerationService
+          toServices: report.toServices,
           targetedUserDid: report.targetedUserDid,
           uri: report.uri,
           feedName: report.feedName,
           additionalInfo: report.additionalInfo || '',
-          action: report.action, // ModAction (e.g., 'post_delete')
-          targetedPost: report.targetedPost, // Optional extra metadata
-          targetedProfile: report.targetedProfile, // Optional extra metadata
-          performed_by: actingUser.did, // Override with acting user's DID
+          action: report.action,
+          targetedPost: report.targetedPost,
+          targetedProfile: report.targetedProfile,
+          performed_by: actingUser.did,
         };
 
         const resultDetails: any[] = [];
 
-        // Process Blacksky if requested.
         if (
           payload.toServices.some(
             (s: ModerationService) => s.value === 'blacksky'
@@ -154,7 +127,6 @@ export const reportModerationEvents = async (
           }
         }
 
-        // Process Ozone if requested.
         if (
           payload.toServices.some((s: ModerationService) => s.value === 'ozone')
         ) {
@@ -167,9 +139,7 @@ export const reportModerationEvents = async (
           }
         }
 
-        // Attempt to create a moderation log entry.
         try {
-          console.log('PAYLOAD.ACTION ', payload.action, '  PAYLOAD.ACTION');
           await createModerationLog({
             uri: payload.uri,
             performed_by: actingUser.did,

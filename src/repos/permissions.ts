@@ -35,7 +35,6 @@ export async function getFeedRole(
   uri: string
 ): Promise<UserRole> {
   try {
-    // Assuming the feed_permissions table uses the column "did" for the user's DID.
     const row = await db('feed_permissions')
       .select('role')
       .where({ did: userDid, uri })
@@ -61,7 +60,6 @@ export async function canPerformAction(
 
 /**
  * Creates a moderation log entry.
- * Adjust the table name and columns based on your schema.
  */
 export async function createModerationLog(log: {
   uri: string;
@@ -118,7 +116,8 @@ export async function getUserRoleForFeed(
 /**
  * Upserts a feed permission record for a target user.
  * It first checks whether the target user's profile exists (and creates one if necessary),
- * then upserts the record in the feed_permissions table, and finally logs the action.
+ * then upserts the record in the feed_permissions table, and finally logs the action. Next iteration will create the concept of an Invitation.
+ * Needs front end support for onboarding with an invitation acception.
  */
 export async function setFeedRole(
   targetUserDid: string,
@@ -136,10 +135,10 @@ export async function setFeedRole(
 
     // 2. If no profile exists, create a minimal profile.
     if (!existingProfile) {
+      // TODO: replace with invitation logic
       const minimalProfile = {
         did: targetUserDid,
-        handle: targetUserDid, // Use the DID as a placeholder.
-        // Add any additional required default fields here.
+        handle: targetUserDid,
       };
       await db('profiles').insert(minimalProfile);
     }
@@ -192,7 +191,7 @@ export async function setFeedRole(
  * @returns A Promise that resolves to an array of objects { feed, moderators }.
  */
 
-export async function getModeratorsByFeeds(
+export async function fetchFeedModsWithProfiles(
   feeds: Feed[]
 ): Promise<{ feed: Feed; moderators: ModeratorData[] }[]> {
   if (!feeds.length) return [];
@@ -242,7 +241,7 @@ export async function getModeratorsByFeeds(
  * @param adminDid - The DID of the admin.
  * @returns A Promise that resolves to an array of ModeratorData.
  */
-export async function getAllModeratorsForAdmin(
+export async function fetchModsForAdminFeeds(
   adminDid: string
 ): Promise<ModeratorData[]> {
   try {
@@ -252,7 +251,7 @@ export async function getAllModeratorsForAdmin(
       .where({ did: adminDid, role: 'admin' });
     if (!adminFeeds.length) return [];
     const feedUris = adminFeeds.map((feed) => feed.uri);
-    // Query for permission records on those feeds (for roles 'mod' or 'admin') with profile details.
+
     const rows = await db('feed_permissions')
       .select(
         'feed_permissions.did as user_did',
@@ -278,7 +277,7 @@ export async function getAllModeratorsForAdmin(
     for (const row of rows) {
       const key = row.profile_did;
       if (!key) continue;
-      // Create the moderator data if it doesn't exist; otherwise update with higher privileges.
+
       if (!moderatorMap.has(key)) {
         moderatorMap.set(key, {
           did: row.profile_did,
@@ -308,8 +307,6 @@ export async function getAllModeratorsForAdmin(
   }
 }
 
-// Placeholder gate function for Blacksky service.
 export function blackskyServiceGate(): boolean {
-  // Replace with your actual logic later.
   return false;
 }

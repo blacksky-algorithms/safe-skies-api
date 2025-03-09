@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { BlueskyOAuthClient } from '../repos/oauth-client';
-import { AtprotoAgent } from '../repos/atproto-agent';
+import { AtprotoAgent } from '../repos/atproto';
 import { getActorFeeds } from '../repos/permissions';
 import { getProfile, saveProfile } from '../repos/profile';
 import { FeedRoleInfo } from '../lib/types/permission';
@@ -75,11 +75,6 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
 /**
  * Handles the OAuth callback from Bluesky.
- * 1. Obtains the user's Bluesky profile data.
- * 2. Retrieves local feed permissions.
- * 3. Upserts (saves) the user profile (with feed permissions) into the database.
- * 4. Creates a JWT session and sets it in an HTTP‑only cookie.
- * 5. Redirects the user back to the client.
  */
 export const callback = async (req: Request, res: Response): Promise<void> => {
   try {
