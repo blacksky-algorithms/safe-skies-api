@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
 
-// Load environment variables from .env file
 dotenv.config();
 
 const envSchema = z.object({
@@ -12,9 +11,10 @@ const envSchema = z.object({
   PGHOST: z.string(),
   PGDATABASE: z.string(),
   ENCRYPTION_KEY: z.string().min(32),
-  BS_BASE_URL: z.enum(['https://bsky.social']),
+  BSKY_BASE_API_URL: z.enum(['https://api.bsky.app']),
   CLIENT_URL: z.string(),
   PORT: z.string().transform(Number),
+  RSKY_FEEDGEN: z.string(),
 });
 
 export const config = envSchema.parse(process.env);

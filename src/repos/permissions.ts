@@ -1,4 +1,3 @@
-// src/repos/permission.ts
 import { db } from '../config/db';
 import { ModAction } from '../lib/types/moderation';
 import { UserRole } from '../lib/types/permission';
