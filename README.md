@@ -1,8 +1,6 @@
 # SAFEskies API
 
-SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles authentication, profile management, feed permissions, and moderation/reporting for the SAFEskies project. This API uses PostgreSQL (or a Supabase instance) for persistence and provides endpoints for OAuth authentication with BlueSky (Atproto), as well as endpoints to report posts and manage moderation.
-
----
+SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles authentication, profile management, feed permissions, and moderation/reporting for the SAFEskies project. This API uses PostgreSQL (or a Supabase instance) for persistence and provides endpoints for OAuth authentication with BlueSky (Atproto), as well as endpoints to report posts, manage moderation, and more.
 
 ## Table of Contents
 
@@ -28,8 +26,6 @@ SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles 
   - [Contributing](#contributing)
   - [License](#license)
 
----
-
 ## Features
 
 - **OAuth Authentication:**  
@@ -37,78 +33,91 @@ SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles 
 - **Profile Management:**  
   Automatically creates or updates user profiles on login.
 - **Feed Permissions:**  
-  Manages feed roles with a clear role hierarchy (`admin`, `mod`, `user`).
-- **Moderation Logging:**  
-  Logs moderation actions (post deletion/restoration, user bans/unbans, mod promotions/demotions) in a dedicated `logs` table.
-- **Reporting System:**  
-  Provides endpoints for reporting posts, with configurable report options and moderation services.
+  Manages feed roles with a clear hierarchy (`admin`, `mod`, `user`).
+- **Moderation Logging & Reporting:**  
+  Logs moderation actions (post deletion/restoration, user bans/unbans, mod promotions/demotions) in a dedicated `logs` table and provides endpoints for reporting posts.
 - **Client Metadata Endpoint:**  
   Serves OAuth client metadata for discovery.
 - **Automated Backups:**  
   Creates automatic backups during schema migrations with easy restoration options.
-
----
 
 ## Project Structure
 
 Below is an example directory structure for the project:
 
 ```
-safe-skies-api/
-├── migrations/
-│ ├── 20250222103045_initial_schema.sql    # Initial database schema and seed data
-│ ├── 20250222103046_add_auth_tables.sql   # Auth tables migration
-│ └── 20250222103047_add_utility_funcs.sql # Backup and restore utilities
-├── src/
-│ ├── config/
-│ │ └── db.ts                # PostgreSQL client configuration
-│ ├── controllers/
-│ │ ├── authController.ts    # Authentication endpoints
-│ │ └── moderationController.ts # Moderation/reporting endpoints
-│ ├── repos/
-│ │ ├── storage.ts          # Persistent SessionStore and StateStore (with encryption)
-│ │ ├── oauth-client.ts     # OAuth client setup using @atproto/oauth-client-node
-│ │ ├── atproto-agent.ts    # AtprotoAgent singleton configuration
-│ │ ├── profile.ts          # Profile management functions
-│ │ ├── permission.ts       # Permission & feed role helper functions
-│ │ ├── logs.ts            # Moderation logging functions
-│ │ ├── reporting.ts       # Reporting helper functions
-│ │ └── constants.ts       # Constants (OAuth client metadata, etc.)
-│ ├── routes/
-│ │ ├── auth.ts           # Authentication routes
-│ │ ├── moderation.ts     # Moderation/reporting routes
-│ │ └── clientMetadata.ts # OAuth client metadata endpoint
-│ └── server.ts           # Express server entry point
-├── .env.sample           # Sample environment variables
-├── package.json
-├── tsconfig.json
-└── README.md
+├── Dockerfile                   # Docker configuration for containerizing the app
+├── README.md                    # Project documentation (this file)
+├── knexfile.ts                  # Knex configuration (TypeScript)
+├── migrate-config.js            # Configuration for database migrations
+├── migrations                   # Database migration scripts in TypeScript
+│   ├── 20250222103043_initial_schema.ts
+│   └── 20250223_add_unique_constraint_to_feed_permissions.ts
+├── package-lock.json            # npm dependency lock file
+├── package.json                 # Project dependencies, scripts, and metadata
+├── src                          # Source code (TypeScript)
+│   ├── config                   # App configuration files
+│   │   ├── db.ts                # Database connection and configuration
+│   │   └── index.ts             # Centralized export for configurations
+│   ├── controllers              # Express controllers handling API logic
+│   │   ├── auth.controller.ts   # Authentication endpoints
+│   │   ├── dev.controller.ts    # Development-only endpoints
+│   │   ├── feed.controller.ts   # Feed-related endpoints
+│   │   ├── logs.controller.ts   # Moderation logs endpoints
+│   │   ├── moderation.controller.ts   # Moderation and reporting endpoints
+│   │   ├── permissions.controller.ts  # Permissions and role management endpoints
+│   │   └── profile.controller.ts      # User profile management endpoints
+│   ├── lib                      # Utility libraries and types
+│   │   ├── constants            # Application constants (e.g., default feed, moderation options)
+│   │   ├── types                # TypeScript type definitions
+│   │   └── utils                # Helper functions and utilities
+│   ├── middleware               # Express middleware functions
+│   │   ├── auth.middleware.ts   # Authentication (JWT verification) middleware
+│   │   └── dev-only.middleware.ts # Middleware for development-only routes
+│   ├── repos                    # Repository layer for direct DB access and business logic
+│   │   ├── atproto.ts           # Atproto agent configuration and API wrappers
+│   │   ├── feed.ts              # Data access for feed permissions and feeds
+│   │   ├── logs.ts              # Data access for moderation logs
+│   │   ├── moderation.ts        # Reporting and moderation helper functions
+│   │   ├── oauth-client.ts      # OAuth client setup
+│   │   ├── permissions.ts       # Data access for permissions and roles
+│   │   ├── profile.ts           # Data access for user profiles
+│   │   └── storage.ts           # Session storage and encryption functionality
+│   ├── routes                   # Express route definitions
+│   │   ├── auth.ts              # Authentication routes
+│   │   ├── clientMetadata.ts    # OAuth client metadata endpoint
+│   │   ├── dev.ts               # Development routes
+│   │   ├── feeds.ts             # Feed-related routes
+│   │   ├── logs.ts              # Moderation logs routes
+│   │   ├── moderation.ts        # Moderation/reporting routes
+│   │   ├── permissions.ts       # Permissions and role management routes
+│   │   └── profile.ts           # Profile management routes
+│   └── server.ts                # Express server entry point
+└── tsconfig.json                # TypeScript configuration
 ```
-
----
 
 ## Setup
 
 ### Prerequisites
 
 - **Node.js** (v14 or higher recommended)
-- **PostgreSQL** (or a Supabase instance for hosting your database)
+- **PostgreSQL**
 - **npm**
 
 ### Installation
 
 1. **Clone the Repository:**
 
-```bash
-git clone https://github.com/FreedomWriter/safe-skies-api.git
-cd safe-skies-api
-```
+   ```bash
+   git clone https://github.com/FreedomWriter/safe-skies-api.git
+   cd safe-skies-api
+   ```
 
 2. **Install Dependencies:**
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 ### Environment Variables
 
@@ -118,9 +127,9 @@ Copy the sample file and update with your configuration:
 cp .env.sample .env
 ```
 
-**Example `.env.sample`:**
+Example `.env.sample`:
 
-```bash
+```
 PORT=5000
 PGUSER=your_PGUSER
 PGPASSWORD=your_PGPASSWORD
@@ -133,23 +142,25 @@ ENCRYPTION_KEY=your_base64_encoded_32_byte_key
 NEXT_PUBLIC_URL=https://your-backend-url.com
 
 CLIENT_URL=https://your-frontend-url.com
+
+JWT_SECRET=your_jwt_secret_key
 ```
 
 ### Database Migrations
 
-This project uses [node-pg-migrate](https://github.com/salsita/node-pg-migrate) to manage your database schema.
+This project uses node-pg-migrate to manage your database schema.
 
-1. **Create the Database Schema:**
+- **Run Migrations:**
 
-```bash
-npm run migrate:up
-```
+  ```bash
+  npm run migrate:up
+  ```
 
-2. **Rollback Migrations:**
+- **Rollback Migrations:**
 
-```bash
-npm run migrate:down
-```
+  ```bash
+  npm run migrate:down
+  ```
 
 When running migrations down, the system automatically creates backup tables with timestamps for all affected data.
 
@@ -157,8 +168,8 @@ When running migrations down, the system automatically creates backup tables wit
 
 #### How Backups Work
 
-- Automatic backups are created before any `migrate:down` operation
-- Each backup is tagged with a timestamp (format: YYYYMMDD_HHMMSS)
+- Automatic backups are created before any `migrate:down` operation.
+- Each backup is tagged with a timestamp (format: YYYYMMDD_HHMMSS).
 - Backups include:
   - Table data
   - Enum values
@@ -167,51 +178,43 @@ When running migrations down, the system automatically creates backup tables wit
 
 #### Managing Backups
 
-The following PostgreSQL functions are available:
+Available PostgreSQL functions:
 
-1. **List Available Backups:**
+- **List Backups:**
 
-```sql
-SELECT * FROM list_backups();
-```
+  ```sql
+  SELECT * FROM list_backups();
+  ```
 
-2. **Restore from a Backup:**
+- **Restore a Backup:**
 
-```sql
-SELECT restore_from_backup('20250222_103045');  -- Replace with your backup timestamp
-```
+  ```sql
+  SELECT restore_from_backup('20250222_103045');  -- Replace with your backup timestamp.
+  ```
 
-3. **Clean Up Old Backups:**
+- **Clean Up Old Backups:**
 
-```sql
-SELECT cleanup_old_backups(30);  -- Removes backups older than 30 days
-```
+  ```sql
+  SELECT cleanup_old_backups(30);  -- Removes backups older than 30 days.
+  ```
 
 #### Restoration Process
 
 1. List available backups:
 
-```sql
-SELECT * FROM list_backups();
-```
+   ```sql
+   SELECT * FROM list_backups();
+   ```
 
-2. Choose a backup timestamp
+2. Choose a backup timestamp.
 
 3. Restore the backup:
 
-```sql
-SELECT restore_from_backup('YOUR_BACKUP_TIMESTAMP');
-```
+   ```sql
+   SELECT restore_from_backup('YOUR_BACKUP_TIMESTAMP');
+   ```
 
-4. Verify your data after restoration
-
-Common restoration scenarios:
-
-- After problematic migrations
-- Following accidental data loss
-- Rolling back to a known good state
-
----
+4. Verify your data after restoration.
 
 ## Running the Server
 
@@ -228,23 +231,21 @@ npm start
 npm run build
 ```
 
-When running in development mode with `npm run dev`, ts-node-dev will automatically restart the server whenever you make changes to your files. The server will run on the port specified in your `.env` file (default is 5000).
+When running in development mode with `npm run dev`, ts-node-dev will automatically restart the server when changes are made. The server will run on the port specified in your `.env` file (default is 5000).
 
 ### Available Scripts
 
-- **`npm run dev`**: Starts the development server with auto-reloading
-- **`npm run build`**: Compiles TypeScript to JavaScript
-- **`npm start`**: Runs the compiled code in production
-- **`npm test`**: Runs Jest tests
-- **`npm run test:watch`**: Runs tests in watch mode
-- **`npm run test:e2e`**: Runs Postman collection tests using Newman
-- **`npm run lint`**: Runs ESLint for code quality
-- **`npm run format`**: Formats code using Prettier
-- **`npm run migrate:create`**: Creates a new migration file
-- **`npm run migrate:up`**: Runs pending migrations
-- **`npm run migrate:down`**: Rolls back the most recent migration
-
----
+- `npm run dev`: Starts the development server with auto-reloading.
+- `npm run build`: Compiles TypeScript to JavaScript.
+- `npm start`: Runs the compiled code in production.
+- `npm test`: Runs Jest tests.
+- `npm run test:watch`: Runs tests in watch mode.
+- `npm run test:e2e`: Runs Postman collection tests using Newman.
+- `npm run lint`: Runs ESLint for code quality.
+- `npm run format`: Formats code using Prettier.
+- `npm run migrate:create`: Creates a new migration file.
+- `npm run migrate:up`: Runs pending migrations.
+- `npm run migrate:down`: Rolls back the most recent migration.
 
 ## API Endpoints
 
@@ -252,11 +253,12 @@ When running in development mode with `npm run dev`, ts-node-dev will automatica
 
 - **GET /auth/signin**  
   Initiates the OAuth flow.  
-  **Query Parameters:**
+  Query Parameters:
 
-  - `handle`: A login hint (e.g., the user handle)  
-    **Response:**  
-    Returns a JSON object with an authorization URL.
+  - `handle`: A login hint (e.g., the user handle).
+
+  Response:  
+  Returns a JSON object with an authorization URL.
 
 - **GET /auth/callback**  
   Handles the OAuth callback. Processes the OAuth response, upserts the user profile, sets an HTTP-only cookie, and redirects to the client URL.
@@ -270,43 +272,44 @@ When running in development mode with `npm run dev`, ts-node-dev will automatica
 ### Moderation / Reporting
 
 - **POST /moderation/report**  
-  Accepts a JSON payload to report a post. The payload includes:
+  Accepts a JSON payload (or an array of payloads) to report a post. The payload includes:
+
   - `targetedPostUri`
   - `reason`
-  - `toServices` (array of services)
+  - `toServices` (array of moderation services)
   - `targetedUserDid`
   - `uri`
   - `feedName`
   - `additionalInfo`
-  - `userDid`
+  - `action`
+  - Optional metadata fields.
 
----
+  Response:  
+  Returns a summary of the processing of each report.
+
+**TODO:** Add detailed Postman documentation for each endpoint.
 
 ## Development Tools
 
-- **Express:** HTTP server framework
-- **ts-node-dev:** TypeScript execution and development environment with auto-reloading
-- **Helmet:** Security headers
-- **CORS:** Cross-Origin Resource Sharing
-- **Morgan:** HTTP request logging
-- **node-pg-migrate:** Database migrations
-- **TypeScript:** Static typing
-- **Jest & Supertest:** Testing
-- **Newman:** Command-line collection runner for Postman
-- **ESLint & Prettier:** Code quality
-- **Husky:** Git hooks for code quality
-
----
+- **Express**: HTTP server framework.
+- **ts-node-dev**: TypeScript execution and development environment with auto-reloading.
+- **Helmet**: Security headers.
+- **CORS**: Cross-Origin Resource Sharing.
+- **Morgan**: HTTP request logging.
+- **node-pg-migrate**: Database migrations.
+- **TypeScript**: Static typing.
+- **Jest & Supertest**: Testing.
+- **Newman**: Command-line collection runner for Postman.
+- **ESLint & Prettier**: Code quality.
+- **Husky**: Git hooks for code quality.
 
 ## Contributing
 
 Contributions are welcome! To contribute:
 
-- Open an issue or submit a pull request
-- Ensure new code includes tests and documentation
-- Follow the coding style guidelines
-
----
+- Open an issue or submit a pull request.
+- Ensure new code includes tests and documentation.
+- Follow the coding style guidelines.
 
 ## License
 

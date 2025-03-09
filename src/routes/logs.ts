@@ -1,4 +1,3 @@
-// src/routes/logs.ts
 import { Router } from 'express';
 import { getLogsController } from '../controllers/logs.controller';
 import { authenticateJWT } from '../middleware/auth.middleware';

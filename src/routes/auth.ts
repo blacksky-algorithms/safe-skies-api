@@ -1,4 +1,3 @@
-// src/routes/auth.ts
 import { Router } from 'express';
 import { signin, callback, logout } from '../controllers/auth.controller';
 

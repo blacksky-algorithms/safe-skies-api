@@ -1,4 +1,3 @@
-// src/routes/feeds.ts
 import { Router } from 'express';
 import { getUserFeeds } from '../controllers/feed.controller';
 

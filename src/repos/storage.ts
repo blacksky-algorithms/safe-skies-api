@@ -20,10 +20,8 @@ export class StateStore {
         return undefined;
       }
 
-      // Assuming row.state is stored as a string (JSON string)
       const rawState = row.state;
 
-      // If it's a string, parse it to get the encrypted object
       let parsedState: any;
       if (typeof rawState === 'string') {
         try {
