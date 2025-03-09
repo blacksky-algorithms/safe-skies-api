@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBulkProfileDetails = exports.groupModeratorsByFeed = void 0;
-exports.buildFeedPermissions = buildFeedPermissions;
-exports.canPerformWithRole = canPerformWithRole;
+exports.canPerformWithRole = exports.getBulkProfileDetails = exports.groupModeratorsByFeed = exports.buildFeedPermissions = void 0;
 const profile_1 = require("../../repos/profile");
-function buildFeedPermissions(userDid, createdFeeds, existingPermissions = []) {
+const permission_1 = require("../constants/permission");
+const buildFeedPermissions = (userDid, createdFeeds, existingPermissions = []) => {
     const permissionsMap = new Map();
     // Convert existing permissions array into a Map keyed by URI
     for (const perm of existingPermissions) {
@@ -26,9 +25,14 @@ function buildFeedPermissions(userDid, createdFeeds, existingPermissions = []) {
             });
         }
         else {
-            // If existing role is 'user', we can raise it to admin if you want
-            // Or preserve 'mod' if it’s “higher.” Adjust logic as you see fit
-            // e.g., if ROLE_PRIORITY[existing.role] < ROLE_PRIORITY['admin'], then upgrade
+            // Only upgrade role if the new one has higher priority
+            if (permission_1.ROLE_PRIORITY[existing.role] < permission_1.ROLE_PRIORITY[defaultRole]) {
+                existing.role = defaultRole;
+            }
+            // Always update the feed_name if available
+            if (feed.displayName) {
+                existing.feed_name = feed.displayName;
+            }
         }
     }
     // Return as an array of permissions with the user DID
@@ -38,7 +42,8 @@ function buildFeedPermissions(userDid, createdFeeds, existingPermissions = []) {
         feed_name: perm.feed_name,
         role: perm.role,
     }));
-}
+};
+exports.buildFeedPermissions = buildFeedPermissions;
 const groupModeratorsByFeed = (permissions) => {
     return permissions.reduce((acc, perm) => {
         if (!acc[perm.uri]) {
@@ -61,19 +66,18 @@ exports.getBulkProfileDetails = getBulkProfileDetails;
 /**
  * Determines if a user with a given role can perform the specified moderation action.
  */
-function canPerformWithRole(role, action) {
+const canPerformWithRole = (role, action) => {
     switch (action) {
-        // Only admins may promote or demote moderators, ban or unban users.
         case 'mod_promote':
         case 'mod_demote':
         case 'user_unban':
         case 'user_ban':
             return role === 'admin';
-        // For post deletion or restoration, mods and admins are allowed.
         case 'post_delete':
         case 'post_restore':
             return role === 'mod' || role === 'admin';
         default:
             return false;
     }
-}
+};
+exports.canPerformWithRole = canPerformWithRole;

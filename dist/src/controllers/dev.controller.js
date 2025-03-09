@@ -1,13 +1,13 @@
 "use strict";
 // src/controllers/dev.controller.ts
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.devLogin = void 0;
-const atproto_agent_1 = require("../repos/atproto-agent");
+exports.getRudyActiveFeeds = exports.devLogin = void 0;
+const atproto_1 = require("../repos/atproto");
 const profile_1 = require("../repos/profile");
 const profile_2 = require("../repos/profile");
+const rudy_1 = require("../../temp/rudy");
 const devLogin = async (req, res) => {
     try {
-        console.log('Dev login request body:', req.body);
         const { accessToken, profile_did } = req.body;
         if (!accessToken || !profile_did) {
             res
@@ -16,9 +16,9 @@ const devLogin = async (req, res) => {
             return;
         }
         // 1. Set access token on AtprotoAgent
-        atproto_agent_1.AtprotoAgent.setHeader('Authorization', `Bearer ${accessToken}`);
+        atproto_1.AtprotoAgent.setHeader('Authorization', `Bearer ${accessToken}`);
         // 2. Get profile data from Bluesky
-        const response = await atproto_agent_1.AtprotoAgent.app.bsky.actor.getProfile({
+        const response = await atproto_1.AtprotoAgent.app.bsky.actor.getProfile({
             actor: profile_did,
         });
         if (!response.success) {
@@ -37,7 +37,7 @@ const devLogin = async (req, res) => {
         };
         // 4. Also get user's feed generator data from the official Bluesky API, if desired
         // If your normal "getActorFeeds" is from the actor feedGenerators, do it:
-        const actorFeedsResponse = await (0, atproto_agent_1.getActorFeeds)(profile_did);
+        const actorFeedsResponse = await (0, atproto_1.getActorFeeds)(profile_did);
         const createdFeeds = actorFeedsResponse?.feeds || [];
         // 5. Save (upsert) the profile + feed permissions
         //    (mirroring your normal callback's "saveProfile" usage)
@@ -82,3 +82,16 @@ const devLogin = async (req, res) => {
     }
 };
 exports.devLogin = devLogin;
+const getRudyActiveFeeds = async (req, res) => {
+    try {
+        const data = await (0, atproto_1.getActorFeeds)(rudy_1.rudy.did);
+        res.json(data);
+    }
+    catch (error) {
+        console.error('Error fetching rudy data:', error);
+        res.status(500).json({
+            error: 'Failed to fetch rudy data',
+        });
+    }
+};
+exports.getRudyActiveFeeds = getRudyActiveFeeds;

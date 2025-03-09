@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.config = void 0;
 const zod_1 = require("zod");
 const dotenv_1 = __importDefault(require("dotenv"));
-// Load environment variables from .env file
 dotenv_1.default.config();
 const envSchema = zod_1.z.object({
     NODE_ENV: zod_1.z.enum(['development', 'production', 'test']),
@@ -16,8 +15,9 @@ const envSchema = zod_1.z.object({
     PGHOST: zod_1.z.string(),
     PGDATABASE: zod_1.z.string(),
     ENCRYPTION_KEY: zod_1.z.string().min(32),
-    BS_BASE_URL: zod_1.z.enum(['https://bsky.social']),
+    BSKY_BASE_API_URL: zod_1.z.enum(['https://api.bsky.app']),
     CLIENT_URL: zod_1.z.string(),
     PORT: zod_1.z.string().transform(Number),
+    RSKY_FEEDGEN: zod_1.z.string(),
 });
 exports.config = envSchema.parse(process.env);

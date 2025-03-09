@@ -1,4 +1,3 @@
-// migrations/20250222103043_initial_schema.ts
 import { Knex } from 'knex';
 
 // Custom type creation helper

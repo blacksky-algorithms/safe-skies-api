@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateJWT = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authenticateJWT = (req, res, next) => {
-    // Extract the token from the Authorization header
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
@@ -14,13 +13,11 @@ const authenticateJWT = (req, res, next) => {
         return;
     }
     try {
-        // Verify the token using the JWT_SECRET
         const secret = process.env.JWT_SECRET;
         if (!secret) {
             throw new Error('Missing JWT_SECRET environment variable');
         }
         const decoded = jsonwebtoken_1.default.verify(token, secret);
-        // Attach the decoded user data to the request object
         req.user = decoded;
         next();
     }

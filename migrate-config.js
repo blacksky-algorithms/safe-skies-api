@@ -6,4 +6,5 @@ const connectionString = `postgresql://${process.env.PGUSER}:${encodedPassword}@
 module.exports = {
   databaseUrl: connectionString,
   migrationsDir: 'migrations',
+  require: 'ts-node/register',
 };

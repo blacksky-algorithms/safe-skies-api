@@ -3,6 +3,7 @@ import { UserRole } from '../types/permission';
 import { ModAction } from '../types/moderation';
 import { getProfile } from '../../repos/profile';
 import { ROLE_PRIORITY } from '../constants/permission';
+import { getModerationServicesConfig } from '../../repos/moderation';
 
 interface Feed {
   uri: string;
@@ -13,54 +14,101 @@ interface ExistingPermission {
   uri: string;
   feed_name: string;
   role: UserRole;
+  allowed_services?: string;
 }
 
-export const buildFeedPermissions = (
+/**
+ * Computes the allowed services for a given feed URI using the moderation services config.
+ * Always includes 'ozone' by default.
+ *
+ * @param feedUri - The feed URI from feed_permissions.
+ * @param servicesConfig - Array of moderation service configuration objects.
+ * @returns An array of allowed service values.
+ */
+async function computeAllowedServicesForFeed(
+  feedUri: string,
+  servicesConfig: { value: string; admin_did?: string }[]
+): Promise<string[]> {
+  const allowed: string[] = ['ozone']; // Ozone is always allowed.
+  for (const service of servicesConfig) {
+    if (service.value === 'ozone') continue;
+    if (service.admin_did && feedUri.includes(service.admin_did)) {
+      allowed.push(service.value);
+    }
+  }
+  return allowed || ['ozone'];
+}
+
+/**
+ * Builds feed permission records for a user by merging created feeds with any existing permissions.
+ * Now also computes the allowed_services for each feed permission.
+ *
+ * @param userDid - The user's DID.
+ * @param createdFeeds - Array of Feed objects representing new feeds.
+ * @param existingPermissions - Array of existing permission records (if any).
+ * @returns An array of feed permission objects ready for insertion/upsert.
+ */
+export async function buildFeedPermissions(
   userDid: string,
   createdFeeds: Feed[],
   existingPermissions: ExistingPermission[] = []
-) => {
+): Promise<
+  {
+    did: string;
+    uri: string;
+    feed_name: string;
+    role: UserRole;
+    allowed_services: string[]; // Now an array of strings.
+  }[]
+> {
   const permissionsMap = new Map<string, ExistingPermission>();
-
-  // Convert existing permissions array into a Map keyed by URI
   for (const perm of existingPermissions) {
     permissionsMap.set(perm.uri, perm);
   }
 
-  // For each newly created feed, set user as admin if not present or if new role is higher
-  for (const feed of createdFeeds) {
-    // If no feed.uri, skip
-    if (!feed.uri) continue;
+  const servicesConfig = await getModerationServicesConfig();
+
+  const permissionsPromises = createdFeeds.map(async (feed) => {
+    if (!feed.uri) return null;
     const existing = permissionsMap.get(feed.uri);
-    // By default, we set admin if none or a lower role
-    const defaultRole: UserRole = 'admin';
+    const defaultRole: UserRole = 'user';
+    let role: UserRole;
+    let feedName: string;
 
     if (!existing) {
-      permissionsMap.set(feed.uri, {
-        uri: feed.uri,
-        feed_name: feed.displayName || feed.uri.split('/').pop() || 'Unnamed',
-        role: defaultRole,
-      });
+      role = defaultRole;
+      feedName = feed.displayName || feed.uri.split('/').pop() || 'Unnamed';
     } else {
-      // Only upgrade role if the new one has higher priority
-      if (ROLE_PRIORITY[existing.role] < ROLE_PRIORITY[defaultRole]) {
-        existing.role = defaultRole;
-      }
-      // Always update the feed_name if available
-      if (feed.displayName) {
-        existing.feed_name = feed.displayName;
-      }
+      role =
+        ROLE_PRIORITY[existing.role] < ROLE_PRIORITY[defaultRole]
+          ? defaultRole
+          : existing.role;
+      feedName = feed.displayName || existing.feed_name;
     }
-  }
 
-  // Return as an array of permissions with the user DID
-  return Array.from(permissionsMap.values()).map((perm) => ({
-    did: userDid,
-    uri: perm.uri,
-    feed_name: perm.feed_name,
-    role: perm.role,
-  }));
-};
+    const allowedServices = await computeAllowedServicesForFeed(
+      feed.uri,
+      servicesConfig
+    );
+
+    return {
+      did: userDid,
+      uri: feed.uri,
+      feed_name: feedName,
+      role,
+      allowed_services: allowedServices,
+    };
+  });
+
+  const permissions = (await Promise.all(permissionsPromises)).filter(Boolean);
+  return permissions as {
+    did: string;
+    uri: string;
+    feed_name: string;
+    role: UserRole;
+    allowed_services: string[];
+  }[];
+}
 
 export const groupModeratorsByFeed = (
   permissions: {

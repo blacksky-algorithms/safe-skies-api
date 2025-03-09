@@ -2,24 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLogsController = void 0;
 const logs_1 = require("../repos/logs");
-const db_1 = require("../config/db"); // Knex instance
-/**
- * Retrieves the current role for a user on a given feed.
- * Since roles are defined per feed, we query the feed_permissions table.
- */
-async function getUserRoleForFeed(userDid, uri) {
-    try {
-        const row = await (0, db_1.db)('feed_permissions')
-            .select('role')
-            .where({ did: userDid, uri })
-            .first();
-        return row ? row.role : 'user';
-    }
-    catch (error) {
-        console.error('Error in getUserRoleForFeed:', error);
-        return 'user';
-    }
-}
+const permissions_1 = require("../repos/permissions");
 /**
  * GET /api/logs
  * Query parameters must include "uri" (the feed identifier).
@@ -31,7 +14,6 @@ async function getUserRoleForFeed(userDid, uri) {
  */
 const getLogsController = async (req, res) => {
     try {
-        // req.user is set by the authentication middleware.
         const sessionPayload = req.user;
         if (!sessionPayload) {
             res.status(401).json({ error: 'Not authenticated' });
@@ -47,8 +29,7 @@ const getLogsController = async (req, res) => {
             return;
         }
         // Determine the user's role for this feed.
-        const role = await getUserRoleForFeed(userDid, uri);
-        console.log({ role });
+        const role = await (0, permissions_1.getUserRoleForFeed)(userDid, uri);
         if (role === 'user') {
             res
                 .status(403)

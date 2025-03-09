@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.callback = exports.logout = exports.signin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const oauth_client_1 = require("../repos/oauth-client");
-const atproto_agent_1 = require("../repos/atproto-agent");
+const atproto_1 = require("../repos/atproto");
 const permissions_1 = require("../repos/permissions");
 const profile_1 = require("../repos/profile");
 /**
@@ -18,7 +18,7 @@ const getUsersBlueskyProfileData = async (oAuthCallbackParams) => {
         throw new Error('Invalid session: No DID found.');
     }
     try {
-        const response = await atproto_agent_1.AtprotoAgent.getProfile({
+        const response = await atproto_1.AtprotoAgent.getProfile({
             actor: session.sub,
         });
         if (!response.success || !response.data) {
@@ -71,11 +71,6 @@ const logout = async (req, res) => {
 exports.logout = logout;
 /**
  * Handles the OAuth callback from Bluesky.
- * 1. Obtains the user's Bluesky profile data.
- * 2. Retrieves local feed permissions.
- * 3. Upserts (saves) the user profile (with feed permissions) into the database.
- * 4. Creates a JWT session and sets it in an HTTP‑only cookie.
- * 5. Redirects the user back to the client.
  */
 const callback = async (req, res) => {
     try {

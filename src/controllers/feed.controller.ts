@@ -11,14 +11,14 @@ export const getUserFeeds = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const userDid = req.query.userDid as string;
+  const userDid = req.query.userDid;
   if (!userDid) {
     res.json({ feeds: [], defaultFeed: DEFAULT_FEED });
     return;
   }
 
   try {
-    const data = await getEnrichedFeedsForUser(userDid);
+    const data = await getEnrichedFeedsForUser(userDid.toString());
     res.json(data);
   } catch (error) {
     console.error('Error fetching user feeds:', error);

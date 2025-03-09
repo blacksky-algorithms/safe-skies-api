@@ -23,4 +23,5 @@ export interface ModerationService {
   value: string;
   label: string;
   feed_gen_endpoint: string | null;
+  admin_did?: string;
 }

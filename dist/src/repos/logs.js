@@ -1,15 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLogs = getLogs;
-// src/repos/logs.ts
 const db_1 = require("../config/db");
 async function getLogs(filters) {
-    // Build the query
     const query = (0, db_1.db)('logs')
         .select('logs.*', 'p1.did as performed_by_did', 'p1.handle as performed_by_handle', 'p1.display_name as performed_by_display_name', 'p1.avatar as performed_by_avatar', 'p2.did as target_user_did_joined', 'p2.handle as target_user_handle', 'p2.display_name as target_user_display_name', 'p2.avatar as target_user_avatar')
         .leftJoin('profiles as p1', 'logs.performed_by', 'p1.did')
         .leftJoin('profiles as p2', 'logs.target_user_did', 'p2.did');
-    // Apply filters if provided
     if (filters.uri) {
         query.where('logs.uri', filters.uri);
     }
@@ -30,13 +27,7 @@ async function getLogs(filters) {
         query.where('logs.created_at', '<=', filters.dateRange.toDate);
     }
     query.orderBy('logs.created_at', filters.sortBy === 'ascending' ? 'asc' : 'desc');
-    // Debug: log the built query SQL for inspection.
-    console.log('Executing query:', query.toString());
     const rows = await query;
-    console.log('Executing query:', query.toString());
-    // Debug: log raw rows returned from the query.
-    console.log('Raw log rows:');
-    // Map rows to LogEntry objects with joined profile data.
     const logs = rows.map((row) => ({
         id: row.id,
         uri: row.uri,
@@ -67,7 +58,5 @@ async function getLogs(filters) {
             }
             : undefined,
     }));
-    // Debug: log the mapped log entries.
-    console.log('Mapped log entries:', logs.map((log) => log.action));
     return logs;
 }

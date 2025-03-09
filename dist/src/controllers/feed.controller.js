@@ -9,14 +9,12 @@ const feed_1 = require("../repos/feed");
  * and optionally updates local feed data if there's a mismatch.
  */
 const getUserFeeds = async (req, res) => {
-    // Extract the user DID from query parameters.
     const userDid = req.query.userDid;
     if (!userDid) {
         res.json({ feeds: [], defaultFeed: constants_1.DEFAULT_FEED });
         return;
     }
     try {
-        // Delegate the heavy lifting to the repository function.
         const data = await (0, feed_1.getEnrichedFeedsForUser)(userDid);
         res.json(data);
     }

@@ -4,13 +4,11 @@ exports.getEnrichedProfile = void 0;
 exports.saveProfile = saveProfile;
 exports.getProfile = getProfile;
 exports.upsertProfile = upsertProfile;
-// src/repos/profile.ts
 const db_1 = require("../config/db");
 const permissions_1 = require("../lib/utils/permissions");
 const feed_1 = require("./feed");
 /**
- * Saves (upserts) a user's basic profile data and feed permissions,
- * mirroring the old Next "saveProfile" approach.
+ * Saves (upserts) a user's basic profile data and feed permissions
  */
 async function saveProfile(blueSkyProfileData, createdFeeds) {
     try {
@@ -20,7 +18,6 @@ async function saveProfile(blueSkyProfileData, createdFeeds) {
             did: blueSkyProfileData.did,
             handle: blueSkyProfileData.handle,
             avatar: blueSkyProfileData.avatar,
-            // If your table uses "display_name" for "displayName"
             display_name: blueSkyProfileData.displayName,
             associated: blueSkyProfileData.associated || null,
             labels: blueSkyProfileData.labels || null,
@@ -33,15 +30,14 @@ async function saveProfile(blueSkyProfileData, createdFeeds) {
             associated: blueSkyProfileData.associated || null,
             labels: blueSkyProfileData.labels || null,
         });
-        // 2. Build feed permissions for newly created feeds
-        // If you want to merge existing feed perms, fetch them first
-        // e.g., const existingPermissions = await db('feed_permissions').where({ user_did: blueSkyProfileData.did });
-        // Then pass existingPermissions into buildFeedPermissions
-        const feedPermissions = (0, permissions_1.buildFeedPermissions)(blueSkyProfileData.did, createdFeeds, 
-        /* existingPermissions */ []);
-        // 3. Upsert new feed permissions
+        // 2. Fetch existing feed permissions for this user
+        const existingPermissions = await (0, db_1.db)('feed_permissions')
+            .select('uri', 'feed_name', 'role')
+            .where({ did: blueSkyProfileData.did });
+        // 3. Build feed permissions, merging with existing ones
+        const feedPermissions = (0, permissions_1.buildFeedPermissions)(blueSkyProfileData.did, createdFeeds, existingPermissions);
+        // 4. Upsert new feed permissions
         if (feedPermissions.length > 0) {
-            // If your table uses (did, uri) or (user_did, uri) as the unique conflict, adjust accordingly
             await (0, db_1.db)('feed_permissions')
                 .insert(feedPermissions)
                 .onConflict(['did', 'uri'])

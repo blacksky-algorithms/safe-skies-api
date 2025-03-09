@@ -20,9 +20,7 @@ class StateStore {
                 console.warn(`StateStore.get: No state found for key`);
                 return undefined;
             }
-            // Assuming row.state is stored as a string (JSON string)
             const rawState = row.state;
-            // If it's a string, parse it to get the encrypted object
             let parsedState;
             if (typeof rawState === 'string') {
                 try {

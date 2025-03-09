@@ -25,6 +25,7 @@ export const getFeedsByRole = async (
 
 /**
  * Returns enriched feed data for a user by merging local permissions with Bluesky data.
+ * Only feeds for which the user has local 'mod' or 'admin' permissions are returned.
  */
 export async function getEnrichedFeedsForUser(userDid: string): Promise<{
   feeds: {
@@ -34,24 +35,32 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     did?: string;
     type: UserRole;
   }[];
-  defaultFeed: {
-    uri: string;
-    displayName?: string;
-    description?: string;
-    did?: string;
-    type: UserRole;
-  };
+  defaultFeed: typeof DEFAULT_FEED;
 }> {
+  // 1. Retrieve local permissions for 'mod' and 'admin' roles.
   const [modFeeds, adminFeeds] = await Promise.all([
     getFeedsByRole(userDid, 'mod'),
     getFeedsByRole(userDid, 'admin'),
   ]);
 
-  // Fetch the latest feed data from Bluesky.
-  const blueskyFeeds = await getActorFeedsData(userDid);
-  const blueskyFeedsMap = new Map(blueskyFeeds.map((feed) => [feed.uri, feed]));
+  // 2. Combine local feeds (permissions) and create a Set of allowed URIs.
+  const localFeeds = [...adminFeeds, ...modFeeds];
+  const allowedUris = new Set(localFeeds.map((feed) => feed.uri));
 
-  // Map the mod permissions into enriched feeds.
+  // 3. Fetch the actor's feeds from BlueSky.
+  const blueskyFeeds = await getActorFeedsData(userDid);
+
+  // 4. Filter BlueSky feeds to only those that are in allowedUris.
+  const filteredBlueskyFeeds = blueskyFeeds.filter((feed) =>
+    allowedUris.has(feed.uri)
+  );
+
+  // 5. Create a lookup Map from feed URI to the corresponding BlueSky feed.
+  const blueskyFeedsMap = new Map(
+    filteredBlueskyFeeds.map((feed) => [feed.uri, feed])
+  );
+
+  // 6. Enrich local permissions with BlueSky data.
   const modFeedsList = modFeeds.map((feed) => {
     const bsFeed = blueskyFeedsMap.get(feed.uri);
     return {
@@ -63,7 +72,6 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     };
   });
 
-  // Map the admin permissions into enriched feeds.
   const adminFeedsList = adminFeeds.map((feed) => {
     const bsFeed = blueskyFeedsMap.get(feed.uri);
     return {
@@ -75,19 +83,7 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     };
   });
 
-  // Update the DB if the display names differ.
-  const updatePromises = [...modFeeds, ...adminFeeds].map(async (feed) => {
-    const bsFeed = blueskyFeedsMap.get(feed.uri);
-    if (bsFeed && bsFeed.displayName !== feed.feed_name) {
-      await db('feed_permissions')
-        .where({ uri: feed.uri, did: userDid })
-        .update({ feed_name: bsFeed.displayName });
-    }
-  });
-
-  await Promise.all(updatePromises);
-
-  // Combine both lists and remove duplicates by URI.
+  // 7. Combine and deduplicate (if needed).
   const allFeeds = [...adminFeedsList, ...modFeedsList];
   const uniqueFeeds = Array.from(
     new Map(allFeeds.map((feed) => [feed.uri, feed])).values()

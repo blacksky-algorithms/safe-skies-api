@@ -4,11 +4,11 @@ exports.getActorFeeds = void 0;
 exports.getFeedRole = getFeedRole;
 exports.canPerformAction = canPerformAction;
 exports.createModerationLog = createModerationLog;
+exports.getUserRoleForFeed = getUserRoleForFeed;
 exports.setFeedRole = setFeedRole;
-exports.getModeratorsByFeeds = getModeratorsByFeeds;
-exports.getAllModeratorsForAdmin = getAllModeratorsForAdmin;
+exports.fetchFeedModsWithProfiles = fetchFeedModsWithProfiles;
+exports.fetchModsForAdminFeeds = fetchModsForAdminFeeds;
 exports.blackskyServiceGate = blackskyServiceGate;
-// src/repos/permission.ts
 const db_1 = require("../config/db");
 const permissions_1 = require("../lib/utils/permissions");
 /**
@@ -33,7 +33,6 @@ exports.getActorFeeds = getActorFeeds;
  */
 async function getFeedRole(userDid, uri) {
     try {
-        // Assuming the feed_permissions table uses the column "did" for the user's DID.
         const row = await (0, db_1.db)('feed_permissions')
             .select('role')
             .where({ did: userDid, uri })
@@ -55,7 +54,6 @@ async function canPerformAction(userDid, action, uri) {
 }
 /**
  * Creates a moderation log entry.
- * Adjust the table name and columns based on your schema.
  */
 async function createModerationLog(log) {
     try {
@@ -79,39 +77,28 @@ async function createModerationLog(log) {
         throw error;
     }
 }
-// export async function createModerationLog(log: {
-//   uri: string;
-//   performed_by: string;
-//   action: ModAction;
-//   target_user_did: string;
-//   target_post_uri?: string;
-//   reason?: string;
-//   to_services?: string[];
-//   metadata: any;
-// }): Promise<void> {
-//   try {
-//     const res = await db('logs').insert({
-//       id: db.raw('gen_random_uuid()'),
-//       uri: log.uri,
-//       performed_by: log.performed_by,
-//       action: log.action,
-//       target_user_did: log.target_user_did,
-//       target_post_uri: log.target_post_uri,
-//       reason: log.reason,
-//       to_services: log.to_services,
-//       metadata: JSON.stringify(log.metadata),
-//       created_at: new Date().toISOString(),
-//     });
-//     console.log('logs res', res);
-//   } catch (error) {
-//     console.log('logs error');
-//     console.error('Error creating moderation log:', error);
-//   }
-// }
+/**
+ * Retrieves the current role for a user on a given feed.
+ * Since roles are defined per feed, we query the feed_permissions table.
+ */
+async function getUserRoleForFeed(userDid, uri) {
+    try {
+        const row = await (0, db_1.db)('feed_permissions')
+            .select('role')
+            .where({ did: userDid, uri })
+            .first();
+        return row ? row.role : 'user';
+    }
+    catch (error) {
+        console.error('Error in getUserRoleForFeed:', error);
+        return 'user';
+    }
+}
 /**
  * Upserts a feed permission record for a target user.
  * It first checks whether the target user's profile exists (and creates one if necessary),
- * then upserts the record in the feed_permissions table, and finally logs the action.
+ * then upserts the record in the feed_permissions table, and finally logs the action. Next iteration will create the concept of an Invitation.
+ * Needs front end support for onboarding with an invitation acception.
  */
 async function setFeedRole(targetUserDid, uri, role, setByUserDid, feedName) {
     try {
@@ -122,10 +109,10 @@ async function setFeedRole(targetUserDid, uri, role, setByUserDid, feedName) {
             .first();
         // 2. If no profile exists, create a minimal profile.
         if (!existingProfile) {
+            // TODO: replace with invitation logic
             const minimalProfile = {
                 did: targetUserDid,
-                handle: targetUserDid, // Use the DID as a placeholder.
-                // Add any additional required default fields here.
+                handle: targetUserDid,
             };
             await (0, db_1.db)('profiles').insert(minimalProfile);
         }
@@ -174,7 +161,7 @@ async function setFeedRole(targetUserDid, uri, role, setByUserDid, feedName) {
  * @param feeds An array of Feed objects.
  * @returns A Promise that resolves to an array of objects { feed, moderators }.
  */
-async function getModeratorsByFeeds(feeds) {
+async function fetchFeedModsWithProfiles(feeds) {
     if (!feeds.length)
         return [];
     try {
@@ -221,7 +208,7 @@ async function getModeratorsByFeeds(feeds) {
  * @param adminDid - The DID of the admin.
  * @returns A Promise that resolves to an array of ModeratorData.
  */
-async function getAllModeratorsForAdmin(adminDid) {
+async function fetchModsForAdminFeeds(adminDid) {
     try {
         // Get feeds where the admin has admin role.
         const adminFeeds = await (0, db_1.db)('feed_permissions')
@@ -230,7 +217,6 @@ async function getAllModeratorsForAdmin(adminDid) {
         if (!adminFeeds.length)
             return [];
         const feedUris = adminFeeds.map((feed) => feed.uri);
-        // Query for permission records on those feeds (for roles 'mod' or 'admin') with profile details.
         const rows = await (0, db_1.db)('feed_permissions')
             .select('feed_permissions.did as user_did', 'feed_permissions.uri', 'feed_permissions.feed_name', 'feed_permissions.role', 'p.did as profile_did', 'p.handle', 'p.display_name', 'p.avatar')
             .leftJoin('profiles as p', 'feed_permissions.did', 'p.did')
@@ -246,7 +232,6 @@ async function getAllModeratorsForAdmin(adminDid) {
             const key = row.profile_did;
             if (!key)
                 continue;
-            // Create the moderator data if it doesn't exist; otherwise update with higher privileges.
             if (!moderatorMap.has(key)) {
                 moderatorMap.set(key, {
                     did: row.profile_did,
@@ -277,8 +262,6 @@ async function getAllModeratorsForAdmin(adminDid) {
         throw error;
     }
 }
-// Placeholder gate function for Blacksky service.
 function blackskyServiceGate() {
-    // Replace with your actual logic later.
     return false;
 }

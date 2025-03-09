@@ -4,7 +4,7 @@ exports.getFeedsByRole = void 0;
 exports.getEnrichedFeedsForUser = getEnrichedFeedsForUser;
 const db_1 = require("../config/db");
 const constants_1 = require("../lib/constants");
-const atproto_agent_1 = require("./atproto-agent");
+const atproto_1 = require("./atproto");
 /**
  * Fetches feeds for a given user (did) with a specific role ('mod' or 'admin').
  * If did is not provided or role === 'user', returns an empty array.
@@ -24,20 +24,15 @@ const getFeedsByRole = async (did, role) => {
 };
 exports.getFeedsByRole = getFeedsByRole;
 /**
- * Combines local feed permissions with Bluesky feed data
- * and returns an enriched feed object.
- */
-/**
  * Returns enriched feed data for a user by merging local permissions with Bluesky data.
  */
 async function getEnrichedFeedsForUser(userDid) {
-    // Retrieve local feed permissions for both mod and admin roles.
     const [modFeeds, adminFeeds] = await Promise.all([
         (0, exports.getFeedsByRole)(userDid, 'mod'),
         (0, exports.getFeedsByRole)(userDid, 'admin'),
     ]);
     // Fetch the latest feed data from Bluesky.
-    const blueskyFeeds = await (0, atproto_agent_1.getActorFeedsData)(userDid);
+    const blueskyFeeds = await (0, atproto_1.getActorFeedsData)(userDid);
     const blueskyFeedsMap = new Map(blueskyFeeds.map((feed) => [feed.uri, feed]));
     // Map the mod permissions into enriched feeds.
     const modFeedsList = modFeeds.map((feed) => {
@@ -61,7 +56,7 @@ async function getEnrichedFeedsForUser(userDid) {
             type: 'admin',
         };
     });
-    // Optionally update the local DB if the display names differ.
+    // Update the DB if the display names differ.
     const updatePromises = [...modFeeds, ...adminFeeds].map(async (feed) => {
         const bsFeed = blueskyFeedsMap.get(feed.uri);
         if (bsFeed && bsFeed.displayName !== feed.feed_name) {

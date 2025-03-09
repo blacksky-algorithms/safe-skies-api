@@ -39,7 +39,8 @@ app.use((req, res, next) => {
 
 app.use('/auth', authRouter);
 app.use('/oauth', clientMetadataRouter);
-app.use('/feeds', feedsRouter);
+
+app.use('/api/feeds', feedsRouter);
 
 app.use('/api', profileRouter);
 app.use('/api/permissions', permissionsRouter);

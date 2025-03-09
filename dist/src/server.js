@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 });
 app.use('/auth', auth_1.default);
 app.use('/oauth', clientMetadata_1.default);
-app.use('/feeds', feeds_1.default);
+app.use('/api/feeds', feeds_1.default);
 app.use('/api', profile_1.default);
 app.use('/api/permissions', permissions_1.default);
 app.use('/api/logs', logs_1.default);
@@ -45,5 +45,7 @@ if (process.env.NODE_ENV === 'development') {
     app.use('/dev', dev_1.default);
 }
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`Server running on port ${PORT}`);
+    }
 });

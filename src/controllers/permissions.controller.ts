@@ -18,7 +18,7 @@ export const promoteModerator = async (
       return;
     }
 
-    const { targetUserDid, uri, feedName } = req.body;
+    const { targetUserDid, uri, feedName, metadata } = req.body;
     if (!targetUserDid || !uri || !feedName) {
       res.status(400).json({ error: 'Missing required fields' });
       return;

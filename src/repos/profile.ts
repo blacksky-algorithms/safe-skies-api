@@ -44,12 +44,12 @@ export async function saveProfile(
       .where({ did: blueSkyProfileData.did });
 
     // 3. Build feed permissions, merging with existing ones
-    const feedPermissions = buildFeedPermissions(
+    const feedPermissions = await buildFeedPermissions(
       blueSkyProfileData.did,
       createdFeeds,
       existingPermissions
     );
-
+    console.log({ feedPermissions });
     // 4. Upsert new feed permissions
     if (feedPermissions.length > 0) {
       await db('feed_permissions')

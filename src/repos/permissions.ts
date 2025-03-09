@@ -8,6 +8,7 @@ import {
   groupModeratorsByFeed,
 } from '../lib/utils/permissions';
 import { Feed } from '@atproto/api/dist/client/types/app/bsky/feed/describeFeedGenerator';
+import { getModerationServicesConfig } from './moderation';
 
 /**
  * Helper: Fetch the actor's feeds from the 'feed_permissions' table using Knex.
@@ -119,6 +120,7 @@ export async function getUserRoleForFeed(
  * then upserts the record in the feed_permissions table, and finally logs the action. Next iteration will create the concept of an Invitation.
  * Needs front end support for onboarding with an invitation acception.
  */
+
 export async function setFeedRole(
   targetUserDid: string,
   uri: string,
@@ -135,7 +137,7 @@ export async function setFeedRole(
 
     // 2. If no profile exists, create a minimal profile.
     if (!existingProfile) {
-      // TODO: replace with invitation logic
+      // TODO: replace with invitation logic.
       const minimalProfile = {
         did: targetUserDid,
         handle: targetUserDid,
@@ -143,7 +145,23 @@ export async function setFeedRole(
       await db('profiles').insert(minimalProfile);
     }
 
-    // 3. Upsert the feed permission record.
+    // 3. Determine allowed services.
+    // Always include "ozone" by default.
+    const allowedServices: string[] = ['ozone'];
+
+    // Fetch the moderation services configuration.
+    const servicesConfig = await getModerationServicesConfig();
+    // For each custom service (other than ozone), check via customServiceGate.
+    for (const service of servicesConfig) {
+      if (service.value !== 'ozone') {
+        const allowed = await customServiceGate(service.value, uri);
+        if (allowed) {
+          allowedServices.push(service.value);
+        }
+      }
+    }
+
+    // 4. Upsert the feed permission record, including allowed_services.
     await db('feed_permissions')
       .insert({
         did: targetUserDid,
@@ -151,6 +169,7 @@ export async function setFeedRole(
         feed_name: feedName,
         role,
         created_by: setByUserDid,
+        allowed_services: allowedServices,
         created_at: new Date().toISOString(),
       })
       .onConflict(['did', 'uri'])
@@ -158,17 +177,18 @@ export async function setFeedRole(
         feed_name: feedName,
         role,
         created_by: setByUserDid,
+        allowed_services: allowedServices,
         created_at: new Date().toISOString(),
       });
 
-    // 4. Create a moderation log.
+    // 5. Create a moderation log entry.
     const action: ModAction = role === 'mod' ? 'mod_promote' : 'mod_demote';
     await createModerationLog({
       uri,
       performed_by: setByUserDid,
       action,
       target_user_did: targetUserDid,
-      metadata: { role, feed_name: feedName },
+      metadata: { role, feed_name: feedName, allowedServices },
     });
 
     return true;
@@ -307,6 +327,31 @@ export async function fetchModsForAdminFeeds(
   }
 }
 
-export function blackskyServiceGate(): boolean {
-  return false;
+/**
+ * Checks if a given feed's URI allows a custom service.
+ * For custom services, the feed's URI (which includes the creator’s DID)
+ * must contain the service's admin_did.
+ *
+ * @param serviceValue - The service to check (e.g., 'blacksky').
+ * @param feedUri - The feed URI from the feed_permissions table.
+ * @returns true if the feed's URI includes the service's admin_did; false otherwise.
+ */
+export async function customServiceGate(
+  serviceValue: string,
+  feedUri: string
+): Promise<boolean> {
+  try {
+    const services = await getModerationServicesConfig();
+    const service = services.find((s) => s.value === serviceValue);
+    if (!service || !service.admin_did) {
+      // If there’s no specific admin_did configured, default to allowing the service.
+      return true;
+    }
+    // Check if the feed URI includes the service's admin_did.
+    return feedUri.includes(service.admin_did);
+  } catch (error) {
+    console.error('Error in customServiceGate:', error);
+    // In case of error, default to rejecting the service.
+    return false;
+  }
 }
