@@ -2,9 +2,9 @@ import { db } from '../config/db';
 import { User } from '../lib/types/user';
 import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 
-import { buildFeedPermissions } from '../lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import { getEnrichedFeedsForUser } from './feed';
+import { buildFeedPermissions } from './permissions';
 
 interface ExtendedProfile extends ProfileViewDetailed {
   associated?: any;
@@ -49,7 +49,7 @@ export async function saveProfile(
       createdFeeds,
       existingPermissions
     );
-    console.log({ feedPermissions });
+
     // 4. Upsert new feed permissions
     if (feedPermissions.length > 0) {
       await db('feed_permissions')

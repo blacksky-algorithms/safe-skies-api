@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { BlueskyOAuthClient } from '../repos/oauth-client';
 import { AtprotoAgent } from '../repos/atproto';
-import { getActorFeeds } from '../repos/permissions';
+import { getActorFeeds } from '../repos/atproto';
 import { getProfile, saveProfile } from '../repos/profile';
-import { FeedRoleInfo } from '../lib/types/permission';
+import { FeedRoleInfo, UserRole } from '../lib/types/permission';
 import { SessionPayload } from '../lib/types/session';
 
 /**
@@ -90,15 +90,12 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
     // 3. Build the initial user object merging local feed roles.
     const initialUser = {
       ...profileData,
-      rolesByFeed: createdFeeds.reduce(
-        (acc: Record<string, FeedRoleInfo>, feed) => {
-          if (feed.uri && feed.role) {
-            acc[feed.uri] = feed.role as FeedRoleInfo;
-          }
-          return acc;
-        },
-        {} as Record<string, FeedRoleInfo>
-      ),
+      rolesByFeed: createdFeeds.map((feed) => ({
+        role: 'admin' as UserRole,
+        uri: feed.uri,
+        displayName: feed.displayName,
+        feed_name: feed.displayName,
+      })),
     };
 
     // 4. Upsert (save) the user profile along with feed permissions.
@@ -109,6 +106,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
 
     // 5. Retrieve the complete profile (including any feed role updates).
     const completeProfile = await getProfile(profileData.did);
+
     if (!completeProfile) {
       throw new Error('Failed to retrieve complete profile');
     }
@@ -118,7 +116,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
       did: completeProfile.did,
       handle: completeProfile.handle,
       displayName: completeProfile.displayName,
-      rolesByFeed: completeProfile.rolesByFeed || {},
+      rolesByFeed: initialUser.rolesByFeed || [],
     };
     const secret = process.env.JWT_SECRET;
     if (!secret) {

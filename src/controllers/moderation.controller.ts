@@ -269,7 +269,7 @@ async function processReport(
       },
       target_post_uri: payload.targetedPostUri,
     });
-    console.log(`Report ${idx}: Moderation log created.`);
+
     resultDetails.push({ service: 'log', result: 'logged' });
   } catch (logError: any) {
     console.error(`Report ${idx}: Error creating moderation log:`, logError);
@@ -305,9 +305,6 @@ export const reportModerationEvents = async (
       console.warn('Request body is not an array. Wrapping in an array.');
       reports = [reports];
     }
-
-    // Debug log the incoming reports.
-    console.log('Received reports:', reports);
 
     // Process each report individually using the helper.
     const summary = await Promise.all(

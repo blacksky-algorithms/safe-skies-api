@@ -4,17 +4,19 @@ import { UserRole } from '../lib/types/permission';
 import { ModeratorData } from '../lib/types/user';
 import {
   canPerformWithRole,
+  computeAllowedServicesForFeed,
   getBulkProfileDetails,
   groupModeratorsByFeed,
 } from '../lib/utils/permissions';
 import { Feed } from '@atproto/api/dist/client/types/app/bsky/feed/describeFeedGenerator';
 import { getModerationServicesConfig } from './moderation';
+import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 
 /**
  * Helper: Fetch the actor's feeds from the 'feed_permissions' table using Knex.
  */
 
-export const getActorFeeds = async (did: string) => {
+export const getActorFeedPermissions = async (did: string) => {
   try {
     const feeds = await db('feed_permissions')
       .select({ name: 'feed_name' }, 'uri', 'role')
@@ -73,10 +75,6 @@ export async function createModerationLog(log: {
   metadata: any;
 }): Promise<void> {
   try {
-    console.log(
-      'Inserting moderation log with data:',
-      JSON.stringify(log, null, 2)
-    );
     const result = await db('logs').insert({
       id: db.raw('gen_random_uuid()'),
       uri: log.uri,
@@ -89,7 +87,6 @@ export async function createModerationLog(log: {
       metadata: JSON.stringify(log.metadata),
       created_at: new Date().toISOString(),
     });
-    console.log('Database insertion result for moderation log:', result);
   } catch (error) {
     console.error('Error creating moderation log:', error);
     throw error;
@@ -354,4 +351,88 @@ export async function customServiceGate(
     // In case of error, default to rejecting the service.
     return false;
   }
+}
+
+/**
+ * Builds feed permission records for a user by merging feeds the user created
+ * with any existing permission records.
+ *
+ * - If a feed appears in the createdFeeds, its role is set to 'admin'.
+ * - If a feed appears only in existingPermissions, its role is preserved.
+ * - For every feed, allowed_services is computed using the moderation services config.
+ *
+ * @param userDid - The user's DID.
+ * @param createdFeeds - Array of Feed objects representing feeds the user created.
+ * @param existingPermissions - Array of existing permission records.
+ * @returns An array of feed permission objects ready for upsert.
+ */
+
+interface ExistingPermission {
+  uri: string;
+  feed_name: string;
+  role: UserRole;
+  allowed_services?: string;
+}
+export async function buildFeedPermissions(
+  userDid: string,
+  createdFeeds: GeneratorView[],
+  existingPermissions: ExistingPermission[] = []
+): Promise<
+  {
+    did: string;
+    uri: string;
+    feed_name: string;
+    role: UserRole;
+    allowed_services: string[];
+  }[]
+> {
+  // Build a Map keyed by feed URI.
+  const permissionsMap = new Map<
+    string,
+    {
+      did: string;
+      uri: string;
+      feed_name: string;
+      role: UserRole;
+      allowed_services: string[];
+    }
+  >();
+
+  // First, add all feeds that the user created (from Bluesky).
+  for (const feed of createdFeeds) {
+    if (!feed.uri) continue;
+    const feedName = feed?.displayName || 'Unnamed';
+    // For created feeds, the user is admin.
+    const allowed_services = await computeAllowedServicesForFeed(
+      feed.uri,
+      await getModerationServicesConfig()
+    );
+    permissionsMap.set(feed.uri, {
+      did: userDid,
+      uri: feed.uri,
+      feed_name: feedName,
+      role: 'admin',
+      allowed_services,
+    });
+  }
+
+  // Then, for any existing permission that is not already in the map, add it.
+  for (const perm of existingPermissions) {
+    // If already set (because the user created it), skip.
+    if (permissionsMap.has(perm.uri)) continue;
+    // Otherwise, compute allowed services for this feed.
+    const allowed_services = await computeAllowedServicesForFeed(
+      perm.uri,
+      await getModerationServicesConfig()
+    );
+    permissionsMap.set(perm.uri, {
+      did: userDid,
+      uri: perm.uri,
+      feed_name: perm.feed_name,
+      role: perm.role,
+      allowed_services,
+    });
+  }
+
+  return Array.from(permissionsMap.values());
 }
