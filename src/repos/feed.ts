@@ -15,7 +15,7 @@ export const getFeedsByRole = async (
   if (!did || role === 'user') return [];
   try {
     return await db('feed_permissions')
-      .select('uri', 'feed_name')
+      .select('uri', 'feed_name', 'admin_did')
       .where({ did, role });
   } catch (error) {
     console.error('Error in getFeedsByRole:', error);

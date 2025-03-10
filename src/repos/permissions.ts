@@ -19,7 +19,7 @@ import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs
 export const getActorFeedPermissions = async (did: string) => {
   try {
     const feeds = await db('feed_permissions')
-      .select({ name: 'feed_name' }, 'uri', 'role')
+      .select({ name: 'feed_name' }, 'uri', 'role', 'admin_did')
       .where({ did });
 
     return { feeds };
@@ -217,7 +217,7 @@ export async function fetchFeedModsWithProfiles(
     const feedUris = feeds.map((feed) => feed.uri);
     // Query for permissions with role 'mod' on the specified feeds.
     const permissions = await db('feed_permissions')
-      .select('uri', 'did as user_did', 'feed_name', 'role')
+      .select('uri', 'did as user_did', 'feed_name', 'role', 'admin_did')
       .whereIn('uri', feedUris)
       .andWhere({ role: 'mod' });
     if (!permissions.length) {

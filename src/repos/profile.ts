@@ -35,7 +35,7 @@ export async function saveProfile(
 
     // 2. Fetch existing feed permissions for this user
     const existingPermissions = await db('feed_permissions')
-      .select('uri', 'feed_name', 'role')
+      .select('uri', 'feed_name', 'role', 'admin_did')
       .where({ did: blueSkyProfileData.did });
 
     // 3. Build feed permissions, merging with existing ones
