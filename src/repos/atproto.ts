@@ -1,5 +1,4 @@
 import { AtpAgent } from '@atproto/api';
-import { db } from '../config/db';
 
 class AtpAgentSingleton {
   private static instance: AtpAgent;

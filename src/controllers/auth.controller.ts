@@ -4,7 +4,7 @@ import { BlueskyOAuthClient } from '../repos/oauth-client';
 import { AtprotoAgent } from '../repos/atproto';
 import { getActorFeeds } from '../repos/atproto';
 import { getProfile, saveProfile } from '../repos/profile';
-import { FeedRoleInfo, UserRole } from '../lib/types/permission';
+import { UserRole } from '../lib/types/permission';
 import { SessionPayload } from '../lib/types/session';
 
 /**

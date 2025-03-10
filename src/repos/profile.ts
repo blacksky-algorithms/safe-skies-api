@@ -1,15 +1,10 @@
 import { db } from '../config/db';
-import { User } from '../lib/types/user';
+import { ExtendedProfile, User } from '../lib/types/user';
 import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import { getEnrichedFeedsForUser } from './feed';
 import { buildFeedPermissions } from './permissions';
-
-interface ExtendedProfile extends ProfileViewDetailed {
-  associated?: any;
-  labels?: any;
-}
 
 /**
  * Saves (upserts) a user's basic profile data and feed permissions

@@ -12,13 +12,13 @@ import { getProfile } from '../../repos/profile';
  * @returns An array of allowed service values.
  */
 export async function computeAllowedServicesForFeed(
-  feedUri: string,
+  admin_did: string,
   servicesConfig: { value: string; admin_did?: string }[]
 ): Promise<string[]> {
   const allowed: string[] = ['ozone']; // Ozone is always allowed.
   for (const service of servicesConfig) {
     if (service.value === 'ozone') continue;
-    if (service.admin_did && feedUri.includes(service.admin_did)) {
+    if (service.admin_did === admin_did) {
       allowed.push(service.value);
     }
   }

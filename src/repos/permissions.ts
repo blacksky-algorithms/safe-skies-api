@@ -1,6 +1,6 @@
 import { db } from '../config/db';
 import { ModAction } from '../lib/types/moderation';
-import { UserRole } from '../lib/types/permission';
+import { ExistingPermission, UserRole } from '../lib/types/permission';
 import { ModeratorData } from '../lib/types/user';
 import {
   canPerformWithRole,
@@ -168,6 +168,7 @@ export async function setFeedRole(
         created_by: setByUserDid,
         allowed_services: allowedServices,
         created_at: new Date().toISOString(),
+        admin_did: setByUserDid,
       })
       .onConflict(['did', 'uri'])
       .merge({
@@ -357,8 +358,8 @@ export async function customServiceGate(
  * Builds feed permission records for a user by merging feeds the user created
  * with any existing permission records.
  *
- * - If a feed appears in the createdFeeds, its role is set to 'admin'.
- * - If a feed appears only in existingPermissions, its role is preserved.
+ * - Feeds in the createdFeeds array are marked with the 'admin' role.
+ * - Feeds that exist only in existingPermissions retain their stored role.
  * - For every feed, allowed_services is computed using the moderation services config.
  *
  * @param userDid - The user's DID.
@@ -366,13 +367,6 @@ export async function customServiceGate(
  * @param existingPermissions - Array of existing permission records.
  * @returns An array of feed permission objects ready for upsert.
  */
-
-interface ExistingPermission {
-  uri: string;
-  feed_name: string;
-  role: UserRole;
-  allowed_services?: string;
-}
 export async function buildFeedPermissions(
   userDid: string,
   createdFeeds: GeneratorView[],
@@ -395,42 +389,46 @@ export async function buildFeedPermissions(
       feed_name: string;
       role: UserRole;
       allowed_services: string[];
+      admin_did: string;
     }
   >();
 
-  // First, add all feeds that the user created (from Bluesky).
+  // Fetch the moderation services configuration once.
+  const servicesConfig = await getModerationServicesConfig();
+
+  // Mark every feed returned from Atproto as 'admin'
   for (const feed of createdFeeds) {
     if (!feed.uri) continue;
-    const feedName = feed?.displayName || 'Unnamed';
-    // For created feeds, the user is admin.
+    console.log({ feed });
+    const feedName = feed.displayName || 'Unnamed';
     const allowed_services = await computeAllowedServicesForFeed(
-      feed.uri,
-      await getModerationServicesConfig()
+      feed.creator.did,
+      servicesConfig
     );
     permissionsMap.set(feed.uri, {
       did: userDid,
       uri: feed.uri,
       feed_name: feedName,
-      role: 'admin',
+      role: 'admin', // All created feeds are admin feeds.
       allowed_services,
+      admin_did: feed.creator.did,
     });
   }
 
-  // Then, for any existing permission that is not already in the map, add it.
+  // Add any existing permission that is not already in the map.
   for (const perm of existingPermissions) {
-    // If already set (because the user created it), skip.
     if (permissionsMap.has(perm.uri)) continue;
-    // Otherwise, compute allowed services for this feed.
     const allowed_services = await computeAllowedServicesForFeed(
-      perm.uri,
-      await getModerationServicesConfig()
+      perm.admin_did,
+      servicesConfig
     );
     permissionsMap.set(perm.uri, {
       did: userDid,
       uri: perm.uri,
       feed_name: perm.feed_name,
-      role: perm.role,
+      role: perm.role, // Preserve the stored role.
       allowed_services,
+      admin_did: perm.admin_did,
     });
   }
 
