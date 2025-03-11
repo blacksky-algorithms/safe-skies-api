@@ -226,7 +226,6 @@ async function processReport(
     } else if (serviceValue === 'ozone') {
       // Process Ozone unconditionally
       try {
-        console.log('reporting to ozone, not blacksky');
         const ozoneResult = await reportToOzone();
         resultDetails.push({ service: 'ozone', result: ozoneResult });
       } catch (ozError: any) {
@@ -250,10 +249,6 @@ async function processReport(
 
   // Attempt to create a moderation log entry.
   try {
-    console.log(
-      `Report ${idx}: Creating moderation log with payload:`,
-      payload
-    );
     await createModerationLog({
       uri: payload.uri,
       performed_by: actingUser.did,

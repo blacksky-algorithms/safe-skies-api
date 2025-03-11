@@ -399,7 +399,7 @@ export async function buildFeedPermissions(
   // Mark every feed returned from Atproto as 'admin'
   for (const feed of createdFeeds) {
     if (!feed.uri) continue;
-    console.log({ feed });
+
     const feedName = feed.displayName || 'Unnamed';
     const allowed_services = await computeAllowedServicesForFeed(
       feed.creator.did,
@@ -409,7 +409,7 @@ export async function buildFeedPermissions(
       did: userDid,
       uri: feed.uri,
       feed_name: feedName,
-      role: 'admin', // All created feeds are admin feeds.
+      role: 'admin',
       allowed_services,
       admin_did: feed.creator.did,
     });
@@ -426,7 +426,7 @@ export async function buildFeedPermissions(
       did: userDid,
       uri: perm.uri,
       feed_name: perm.feed_name,
-      role: perm.role, // Preserve the stored role.
+      role: perm.role,
       allowed_services,
       admin_did: perm.admin_did,
     });
