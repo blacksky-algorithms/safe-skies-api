@@ -15,6 +15,7 @@ const envSchema = z.object({
   CLIENT_URL: z.string(),
   PORT: z.string().transform(Number),
   RSKY_FEEDGEN: z.string(),
+  RSKY_API_KEY: z.string(),
 });
 
 export const config = envSchema.parse(process.env);
