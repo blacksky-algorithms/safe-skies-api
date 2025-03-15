@@ -54,13 +54,14 @@ export async function reportToBlacksky(uris: { uri: string }[]) {
         body: JSON.stringify(uris),
       }
     );
-
+    console.log({ response });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    return await response;
   } catch (error) {
+    console.log({ error });
     console.error('Error:', error);
     throw error;
   }

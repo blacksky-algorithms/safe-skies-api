@@ -1,11 +1,17 @@
-# SAFEskies API
+# SAFEskies API :shield:
 
-SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles authentication, profile management, feed permissions, and moderation/reporting for the SAFEskies project. This API uses PostgreSQL (or a Supabase instance) for persistence and provides endpoints for OAuth authentication with BlueSky (Atproto), as well as endpoints to report posts, manage moderation, and more.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Stability: Alpha](https://img.shields.io/badge/Stability-Alpha-orange.svg)]()
+
+SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environment)—a Node.js/Express API that handles authentication, profile management, feed permissions, and moderation/reporting for the SAFEskies project. This API uses PostgreSQL (or a Supabase instance) for persistence and provides endpoints for OAuth authentication with BlueSky (Atproto), as well as endpoints to report posts, manage moderation, and more.
+
+**Live Application**: API powers the frontend at [www.safeskies.app](https://www.safeskies.app)
 
 ## Table of Contents
 
-- [SAFEskies API](#safeskies-api)
+- [SAFEskies API :shield:](#safeskies-api-shield)
   - [Table of Contents](#table-of-contents)
+  - [⚠️ Stability Warning](#️-stability-warning)
   - [Features](#features)
   - [Project Structure](#project-structure)
   - [Setup](#setup)
@@ -24,7 +30,23 @@ SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles 
     - [Moderation / Reporting](#moderation--reporting)
   - [Development Tools](#development-tools)
   - [Contributing](#contributing)
+    - [Current Contribution Priorities](#current-contribution-priorities)
+    - [Contribution Process](#contribution-process)
   - [License](#license)
+  - [Maintainer](#maintainer)
+
+## ⚠️ Stability Warning
+
+**IMPORTANT**: SAFEskies API is currently in an alpha state of development. The application is functional but subject to significant changes as we work toward a stable release.
+
+You should be aware of the following:
+
+- The API interfaces may change without backward compatibility
+- Database schema and data structures could be modified between versions
+- Authentication mechanisms might evolve as we stabilize the architecture
+- Documentation is still evolving along with the application
+
+We encourage testing and feedback but recommend caution when using SAFEskies API in production environments at this stage.
 
 ## Features
 
@@ -43,7 +65,7 @@ SAFEskies API is the backend for SAFEskies—a Node.js/Express API that handles 
 
 ## Project Structure
 
-Below is an example directory structure for the project:
+Below is the directory structure for the project:
 
 ```
 ├── Dockerfile                   # Docker configuration for containerizing the app
@@ -100,17 +122,17 @@ Below is an example directory structure for the project:
 
 ### Prerequisites
 
-- **Node.js** (v14 or higher recommended)
-- **PostgreSQL**
-- **npm**
+- **Node.js** (v18 or higher recommended)
+- **PostgreSQL** (or a Supabase instance)
+- **npm** (v9 or higher)
 
 ### Installation
 
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/FreedomWriter/safe-skies-api.git
-   cd safe-skies-api
+   git clone https://github.com/FreedomWriter/SAFEskies.git
+   cd SAFEskies
    ```
 
 2. **Install Dependencies:**
@@ -129,7 +151,7 @@ cp .env.sample .env
 
 Example `.env.sample`:
 
-```
+```bash
 PORT=5000
 PGUSER=your_PGUSER
 PGPASSWORD=your_PGPASSWORD
@@ -148,7 +170,13 @@ JWT_SECRET=your_jwt_secret_key
 
 ### Database Migrations
 
-This project uses node-pg-migrate to manage your database schema.
+This project uses Knex.js to manage your database schema.
+
+- **Create a Migration:**
+
+  ```bash
+  npm run migrate:create migration_name
+  ```
 
 - **Run Migrations:**
 
@@ -240,6 +268,7 @@ When running in development mode with `npm run dev`, ts-node-dev will automatica
 - `npm start`: Runs the compiled code in production.
 - `npm test`: Runs Jest tests.
 - `npm run test:watch`: Runs tests in watch mode.
+- `npm run test:coverage`: Runs tests with coverage report.
 - `npm run test:e2e`: Runs Postman collection tests using Newman.
 - `npm run lint`: Runs ESLint for code quality.
 - `npm run format`: Formats code using Prettier.
@@ -287,30 +316,80 @@ When running in development mode with `npm run dev`, ts-node-dev will automatica
   Response:  
   Returns a summary of the processing of each report.
 
-**TODO:** Add detailed Postman documentation for each endpoint.
+**TODO:** Add detailed API documentation for each endpoint.
 
 ## Development Tools
 
 - **Express**: HTTP server framework.
+- **Knex**: SQL query builder for PostgreSQL.
 - **ts-node-dev**: TypeScript execution and development environment with auto-reloading.
 - **Helmet**: Security headers.
 - **CORS**: Cross-Origin Resource Sharing.
 - **Morgan**: HTTP request logging.
-- **node-pg-migrate**: Database migrations.
 - **TypeScript**: Static typing.
 - **Jest & Supertest**: Testing.
 - **Newman**: Command-line collection runner for Postman.
 - **ESLint & Prettier**: Code quality.
 - **Husky**: Git hooks for code quality.
+- **Zod**: TypeScript-first schema validation.
 
 ## Contributing
 
-Contributions are welcome! To contribute:
+SAFEskies welcomes community contributions, but please note our current development phase focuses on establishing stability before implementing major new features.
 
-- Open an issue or submit a pull request.
-- Ensure new code includes tests and documentation.
-- Follow the coding style guidelines.
+### Current Contribution Priorities
+
+- Bug fixes and stability improvements
+- Documentation improvements
+- Test coverage expansion
+- Security enhancements
+
+### Contribution Process
+
+1. **Check Existing Issues**: Review open issues to see if your concern is already being addressed.
+
+2. **Open an Issue First**: Before submitting code changes, please open an issue to discuss your proposed changes.
+
+   - For bugs, include reproduction steps and expected behavior
+   - For features, explain the use case and implementation approach
+
+3. **Development Workflow**:
+
+   ```bash
+   # Fork and clone the repository
+   git clone https://github.com/your-username/SAFEskies.git
+   cd SAFEskies
+
+   # Create a descriptive feature branch
+   git checkout -b fix/issue-description
+
+   # Install dependencies
+   npm install
+
+   # Make your changes with tests
+   # Run tests to ensure no regressions
+   npm test
+   ```
+
+4. **Code Standards**:
+
+   - Follow existing code style patterns
+   - Include comments for complex logic
+   - Add tests for new functionality
+   - Update documentation to reflect changes
+
+5. **Pull Request Process**:
+   - Ensure all tests pass
+   - Reference the related issue in your PR
+   - Provide a clear description of changes
+   - Be responsive to review feedback
+
+The maintainer will review PRs on a regular basis, prioritizing stability-focused contributions during this alpha development phase.
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Maintainer
+
+Maintainer: Natalie Davis ([@codefreedomritr.bsky.social](https://bsky.app/profile/codefreedomritr.bsky.social))

@@ -8,8 +8,6 @@ import {
 
 import { createModerationLog, customServiceGate } from '../repos/permissions';
 
-import { ModerationService } from '../lib/types/moderation';
-
 export const getReportOptions = async (
   req: Request,
   res: Response
