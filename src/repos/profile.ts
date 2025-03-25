@@ -1,6 +1,5 @@
 import { db } from '../config/db';
 import { ExtendedProfile, User } from '../lib/types/user';
-import { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import { getEnrichedFeedsForUser } from './feed';
