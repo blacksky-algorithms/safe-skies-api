@@ -17,5 +17,6 @@
     "src", // Include all files in the src folder
     "knexfile.ts", // Include knexfile.ts from the root
     "migrations/**/*.ts" // Include all migration files
-  ]
+  ],
+  "ignore": ["dist"]
 }

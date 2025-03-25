@@ -7,6 +7,7 @@ import {
 } from '../repos/moderation';
 
 import { createModerationLog, customServiceGate } from '../repos/permissions';
+import { Report } from '../lib/types/moderation';
 
 export const getReportOptions = async (
   req: Request,
@@ -52,10 +53,10 @@ export const getModerationServices = async (
  * Returns an object containing the report payload, status, and details from processing each service and logging.
  */
 async function processReport(
-  report: any,
+  report: Report,
   idx: number,
   actingUser: { did: string }
-): Promise<any> {
+) {
   // Build the payload and override performed_by with actingUser.did
   const payload = {
     targetedPostUri: report.targetedPostUri,
@@ -71,7 +72,11 @@ async function processReport(
     performed_by: actingUser.did,
   };
 
-  const resultDetails: any[] = [];
+  const resultDetails: {
+    service: string;
+    result?: unknown;
+    error?: unknown;
+  }[] = [];
 
   // Helper to process a service
   async function processService(serviceValue: string) {
@@ -87,11 +92,14 @@ async function processReport(
             service: 'blacksky',
             result: blackskyResult,
           });
-        } catch (bsError: any) {
+        } catch (bsError: unknown) {
           console.error(`Report ${idx}: Error reporting to Blacksky:`, bsError);
           resultDetails.push({
             service: 'blacksky',
-            error: bsError.message,
+            error:
+              bsError instanceof Error
+                ? bsError.message
+                : 'An unknown error occurred',
           });
         }
       } else {
@@ -106,9 +114,15 @@ async function processReport(
       try {
         const ozoneResult = await reportToOzone();
         resultDetails.push({ service: 'ozone', result: ozoneResult });
-      } catch (ozError: any) {
+      } catch (ozError: unknown) {
         console.error(`Report ${idx}: Error reporting to Ozone:`, ozError);
-        resultDetails.push({ service: 'ozone', error: ozError.message });
+        resultDetails.push({
+          service: 'ozone',
+          error:
+            ozError instanceof Error
+              ? ozError.message
+              : 'An unknown error occurred',
+        });
       }
     } else {
       // For any future services, default behavior (or add extra logic as needed)
@@ -144,9 +158,15 @@ async function processReport(
     });
 
     resultDetails.push({ service: 'log', result: 'logged' });
-  } catch (logError: any) {
+  } catch (logError: unknown) {
     console.error(`Report ${idx}: Error creating moderation log:`, logError);
-    resultDetails.push({ service: 'log', error: logError.message });
+    resultDetails.push({
+      service: 'log',
+      error:
+        logError instanceof Error
+          ? logError.message
+          : 'An unknown error occurred',
+    });
   }
 
   return { report: payload, status: 'success', details: resultDetails };
@@ -181,13 +201,13 @@ export const reportModerationEvents = async (
 
     // Process each report individually using the helper.
     const summary = await Promise.all(
-      reports.map((report: any, idx: number) =>
+      reports.map((report: Report, idx: number) =>
         processReport(report, idx, actingUser)
       )
     );
 
     res.json({ summary });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error reporting moderation events:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

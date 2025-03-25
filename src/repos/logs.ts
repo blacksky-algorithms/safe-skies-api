@@ -44,7 +44,7 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
 
   const rows = await query;
 
-  const logs: LogEntry[] = rows.map((row: any) => ({
+  const logs: LogEntry[] = rows.map((row) => ({
     id: row.id,
     uri: row.uri,
     performed_by: row.performed_by,

@@ -72,10 +72,10 @@ export async function createModerationLog(log: {
   target_post_uri?: string;
   reason?: string;
   to_services?: string[];
-  metadata: any;
+  metadata: unknown;
 }): Promise<void> {
   try {
-    const result = await db('logs').insert({
+    await db('logs').insert({
       id: db.raw('gen_random_uuid()'),
       uri: log.uri,
       performed_by: log.performed_by,

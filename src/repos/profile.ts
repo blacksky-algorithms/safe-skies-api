@@ -1,5 +1,5 @@
 import { db } from '../config/db';
-import { ExtendedProfile, User } from '../lib/types/user';
+import { User } from '../lib/types/user';
 
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import { getEnrichedFeedsForUser } from './feed';
@@ -9,7 +9,7 @@ import { buildFeedPermissions } from './permissions';
  * Saves (upserts) a user's basic profile data and feed permissions
  */
 export async function saveProfile(
-  blueSkyProfileData: ExtendedProfile,
+  blueSkyProfileData: User,
   createdFeeds: GeneratorView[]
 ): Promise<boolean> {
   try {
@@ -59,13 +59,13 @@ export async function saveProfile(
   }
 }
 // getProfile fetches a user by DID from the 'profiles' table
-export async function getProfile(did: string): Promise<User | null> {
+export async function getProfile(did: string) {
   try {
     const result = await db('profiles').select('*').where({ did }).first();
 
     if (!result) return null;
 
-    return result as User;
+    return result;
   } catch (error) {
     console.error('Error fetching profile:', error);
     return null;
@@ -75,14 +75,14 @@ export async function getProfile(did: string): Promise<User | null> {
 export async function upsertProfile(profile: Partial<User>): Promise<boolean> {
   try {
     // Map TypeScript fields to DB columns
-    const dbProfile: Record<string, any> = {
+    const dbProfile: Record<string, unknown> = {
       did: profile.did,
       handle: profile.handle,
       display_name: profile.displayName,
       avatar: profile.avatar,
       associated: {
         ...(profile.associated || {}),
-        rolesByFeed: profile.rolesByFeed || [],
+        rolesByFeed: profile.rolesByFeed || [], // TODO: investigate
       },
       labels: profile.labels || null,
     };

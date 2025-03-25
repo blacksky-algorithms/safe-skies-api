@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { AtprotoAgent, getActorFeeds } from '../repos/atproto';
 import { saveProfile } from '../repos/profile';
 import { getProfile } from '../repos/profile';
+import { UserRole } from '../lib/types/permission';
 
 export const devLogin = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -45,9 +46,19 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     const actorFeedsResponse = await getActorFeeds(profile_did);
     const createdFeeds = actorFeedsResponse?.feeds || [];
 
+    const initialUser = {
+      ...profileData,
+      rolesByFeed: createdFeeds.map((feed) => ({
+        role: 'admin' as UserRole,
+        uri: feed.uri,
+        displayName: feed.displayName,
+        feed_name: feed.displayName,
+      })),
+    };
+
     // 5. Save (upsert) the profile + feed permissions
     //    (mirroring your normal callback's "saveProfile" usage)
-    const success = await saveProfile(profileData, createdFeeds);
+    const success = await saveProfile(initialUser, createdFeeds);
     if (!success) {
       throw new Error('Failed to save profile data');
     }
