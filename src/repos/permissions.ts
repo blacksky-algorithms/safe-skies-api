@@ -422,11 +422,13 @@ export async function buildFeedPermissions(
       perm.admin_did,
       servicesConfig
     );
+    // If an existing permission is 'admin', but the user didn't create the feed, override it to 'user'
+    const role: UserRole = perm.role === 'admin' ? 'user' : perm.role;
     permissionsMap.set(perm.uri, {
       did: userDid,
       uri: perm.uri,
       feed_name: perm.feed_name,
-      role: perm.role,
+      role,
       allowed_services,
       admin_did: perm.admin_did,
     });

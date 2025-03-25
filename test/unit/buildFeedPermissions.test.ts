@@ -1,20 +1,21 @@
-// test/unit/buildFeedPermissions.test.ts
-
 import { buildFeedPermissions } from '../../src/repos/permissions';
 import { ExistingPermission } from '../../src/lib/types/permission';
-// Import the mocked functions so we can override their implementations.
+
 import { getModerationServicesConfig } from '../../src/repos/moderation';
 import { computeAllowedServicesForFeed } from '../../src/lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 
-// Import our reusable mocks.
 import {
   mockGetModerationServicesConfig,
   mockComputeAllowedServicesForFeed,
   mockServicesConfig,
 } from '../helpers/mocks';
+import {
+  sampleExistingPermission,
+  sampleGeneratorView,
+  sampleGeneratorViewNoDisplayName,
+} from '../helpers/fixtures';
 
-// Mock the modules that export the helper functions.
 jest.mock('../../src/repos/moderation', () => ({
   getModerationServicesConfig: jest.fn(),
 }));
@@ -22,35 +23,6 @@ jest.mock('../../src/repos/moderation', () => ({
 jest.mock('../../src/lib/utils/permissions', () => ({
   computeAllowedServicesForFeed: jest.fn(),
 }));
-
-// Sample GeneratorView fixture
-const sampleGeneratorView: GeneratorView = {
-  uri: 'feed:1',
-  cid: 'cid1',
-  did: 'did1',
-  creator: {
-    did: 'admin1',
-    displayName: 'Admin One',
-    handle: '@admin1',
-  },
-  displayName: 'Feed One',
-  indexedAt: '2025-03-24T00:00:00.000Z',
-};
-
-// A feed without a displayName should default to 'Unnamed'
-const sampleGeneratorViewNoDisplayName: GeneratorView = {
-  ...sampleGeneratorView,
-  uri: 'feed:2',
-  displayName: '',
-};
-
-// Sample ExistingPermission fixture
-const sampleExistingPermission: ExistingPermission = {
-  uri: 'feed:3',
-  feed_name: 'Existing Feed',
-  role: 'mod',
-  admin_did: 'admin2',
-};
 
 beforeEach(() => {
   // Reset mocks before each test.
@@ -183,7 +155,7 @@ describe('buildFeedPermissions', () => {
     expect(result).toHaveLength(0);
   });
 
-  it.skip('should override admin role for existing permissions on feeds not created by the user', async () => {
+  it('should override admin role for existing permissions on feeds not created by the user', async () => {
     const userDid = 'user:123';
     // No created feed for this URI.
     const existingPermissionAdmin: ExistingPermission = {
@@ -198,7 +170,7 @@ describe('buildFeedPermissions', () => {
 
     expect(result).toHaveLength(1);
     // Expect that the role is overridden to 'mod' (per our intended behavior)
-    expect(result[0].role).toBe('mod');
+    expect(result[0].role).toBe('user');
   });
 
   it('should return an empty array if no feeds are provided', async () => {
@@ -218,6 +190,59 @@ describe('buildFeedPermissions', () => {
         sampleGeneratorView.creator.did,
         mockServicesConfig
       )
+    );
+  });
+
+  it('should call getModerationServicesConfig only once', async () => {
+    const userDid = 'user:123';
+    const createdFeeds: GeneratorView[] = [
+      sampleGeneratorView,
+      sampleGeneratorViewNoDisplayName,
+    ];
+    const existingPermissions: ExistingPermission[] = [
+      sampleExistingPermission,
+      {
+        uri: 'feed:admin',
+        feed_name: 'Admin Feed',
+        role: 'admin',
+        admin_did: 'admin2',
+      },
+    ];
+
+    await buildFeedPermissions(userDid, createdFeeds, existingPermissions);
+    expect(getModerationServicesConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call computeAllowedServicesForFeed for each valid feed and permission', async () => {
+    const userDid = 'user:123';
+    // Two created feeds (both valid) and one existing permission (for a different URI).
+    const createdFeeds: GeneratorView[] = [
+      sampleGeneratorView,
+      sampleGeneratorViewNoDisplayName,
+    ];
+    const existingPermissions: ExistingPermission[] = [
+      {
+        uri: 'feed:extra',
+        feed_name: 'Extra Feed',
+        role: 'mod',
+        admin_did: 'admin3',
+      },
+    ];
+
+    await buildFeedPermissions(userDid, createdFeeds, existingPermissions);
+
+    // computeAllowedServicesForFeed should be called once for each created feed and once for each non-duplicated existing permission.
+    // In this case: 2 (created feeds) + 1 (existing permission) = 3 calls.
+    expect(mockComputeAllowedServicesForFeed).toHaveBeenCalledTimes(3);
+    // Check that it was called with the correct parameters:
+    expect(mockComputeAllowedServicesForFeed).toHaveBeenCalledWith(
+      sampleGeneratorView.creator.did,
+      mockServicesConfig
+    );
+    // And for the existing permission:
+    expect(mockComputeAllowedServicesForFeed).toHaveBeenCalledWith(
+      'admin3',
+      mockServicesConfig
     );
   });
 });
