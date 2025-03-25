@@ -28,6 +28,7 @@ export const mockGetModerationServicesConfig = async (): Promise<
 export const mockComputeAllowedServicesForFeed = jest.fn(
   async (
     adminDid: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     servicesConfig: ModerationService[]
   ): Promise<string[]> => {
     // Always include 'ozone' by default.
