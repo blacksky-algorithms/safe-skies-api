@@ -26,3 +26,18 @@ export const sampleExistingPermission: ExistingPermission = {
   role: 'mod',
   admin_did: 'admin2',
 };
+
+export const sampleModerationServices = [
+  {
+    value: 'ozone',
+    label: 'Ozone',
+    feed_gen_endpoint: null,
+    admin_did: 'admin1',
+  },
+  {
+    value: 'custom',
+    label: 'Custom Service',
+    feed_gen_endpoint: 'http://example.com',
+    admin_did: 'admin2',
+  },
+];
