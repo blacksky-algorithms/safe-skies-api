@@ -4,4 +4,5 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/test/**/*.test.ts'],
   moduleDirectories: ['node_modules', 'src'],
+  setupFilesAfterEnv: ['<rootDir>/test/integration/setup.ts'],
 };
