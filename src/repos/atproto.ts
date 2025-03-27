@@ -31,16 +31,3 @@ export const getActorFeeds = async (actor?: string) => {
     throw new Error('Failed to fetch feed generator data.');
   }
 };
-
-/**
- * Retrieve the actor's feeds from Bluesky.
- */
-export const getActorFeedsData = async (actor: string) => {
-  try {
-    const response = await AtprotoAgent.app.bsky.feed.getActorFeeds({ actor });
-    return response.data?.feeds || [];
-  } catch (error) {
-    console.error('Error fetching Bluesky feeds:', error);
-    return [];
-  }
-};

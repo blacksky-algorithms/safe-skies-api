@@ -2,7 +2,7 @@ import { db } from '../config/db';
 
 import { DEFAULT_FEED } from '../lib/constants';
 import { UserRole } from '../lib/types/permission';
-import { getActorFeedsData } from './atproto';
+import { getActorFeeds } from './atproto';
 
 /**
  * Fetches feeds for a given user (did) with a specific role ('mod' or 'admin').
@@ -48,7 +48,8 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
   const allowedUris = new Set(localFeeds.map((feed) => feed.uri));
 
   // 3. Fetch the actor's feeds from BlueSky.
-  const blueskyFeeds = await getActorFeedsData(userDid);
+  const response = await getActorFeeds(userDid);
+  const blueskyFeeds = response?.feeds || [];
 
   // 4. Filter BlueSky feeds to only those that are in allowedUris.
   const filteredBlueskyFeeds = blueskyFeeds.filter((feed) =>
