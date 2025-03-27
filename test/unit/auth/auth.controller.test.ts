@@ -3,28 +3,28 @@ import {
   signin,
   logout,
   callback,
-} from '../../src/controllers/auth.controller';
+} from '../../../src/controllers/auth.controller';
 
-jest.mock('../../src/repos/oauth-client', () => {
-  const { mockBlueskyOAuthClient } = require('../mocks/auth.mocks');
+jest.mock('../../../src/repos/oauth-client', () => {
+  const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
   return {
     BlueskyOAuthClient: mockBlueskyOAuthClient,
   };
 });
 
-jest.mock('../../src/repos/atproto', () => {
+jest.mock('../../../src/repos/atproto', () => {
   const {
     mockAtprotoAgent,
     mockGetActorFeeds,
-  } = require('../mocks/auth.mocks');
+  } = require('../../mocks/auth.mocks');
   return {
     AtprotoAgent: mockAtprotoAgent,
     getActorFeeds: mockGetActorFeeds,
   };
 });
 
-jest.mock('../../src/repos/profile', () => {
-  const { mockGetProfile, mockSaveProfile } = require('../mocks/auth.mocks');
+jest.mock('../../../src/repos/profile', () => {
+  const { mockGetProfile, mockSaveProfile } = require('../../mocks/auth.mocks');
   return {
     getProfile: mockGetProfile,
     saveProfile: mockSaveProfile,
@@ -32,7 +32,7 @@ jest.mock('../../src/repos/profile', () => {
 });
 
 jest.mock('jsonwebtoken', () => {
-  const { mockJwtSign } = require('../mocks/auth.mocks');
+  const { mockJwtSign } = require('../../mocks/auth.mocks');
   return {
     sign: mockJwtSign,
   };
@@ -78,7 +78,7 @@ describe('Auth Controller', () => {
       const res = createMockResponse();
       const fakeUrl = new URL('http://example.com');
 
-      const { mockBlueskyOAuthClient } = require('../mocks/auth.mocks');
+      const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
       mockBlueskyOAuthClient.authorize.mockResolvedValue(fakeUrl);
 
       await signin(req, res);
@@ -126,7 +126,7 @@ describe('Auth Controller', () => {
         mockGetProfile,
         mockSaveProfile,
         mockJwtSign,
-      } = require('../mocks/auth.mocks');
+      } = require('../../mocks/auth.mocks');
 
       const fakeSession = { sub: 'did:example:123' };
       mockBlueskyOAuthClient.callback.mockResolvedValue({
@@ -168,7 +168,7 @@ describe('Auth Controller', () => {
       const req = createMockRequest({ query: { code: 'abc', state: '123' } });
       const res = createMockResponse();
       process.env.CLIENT_URL = 'http://client.com';
-      const { mockBlueskyOAuthClient } = require('../mocks/auth.mocks');
+      const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
 
       const consoleSpy = jest
         .spyOn(console, 'error')

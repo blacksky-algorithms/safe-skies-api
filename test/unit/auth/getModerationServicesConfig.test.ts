@@ -1,12 +1,12 @@
-import { getModerationServicesConfig } from '../../src/repos/moderation';
-import { db } from '../../src/config/db';
+import { getModerationServicesConfig } from '../../../src/repos/moderation';
+import { db } from '../../../src/config/db';
 import NodeCache from 'node-cache';
-import { sampleModerationServices } from '../fixtures/permissions.fixtures';
+import { sampleModerationServices } from '../../fixtures/permissions.fixtures';
 import {
   createMockCache,
   createMockDb,
   createMockDbReject,
-} from '../mocks/permissions.mocks';
+} from '../../mocks/permissions.mocks';
 
 // Mock NodeCache using our helper.
 jest.mock('node-cache', () => {
@@ -17,7 +17,7 @@ jest.mock('node-cache', () => {
 });
 
 // Mock the database module using the named export 'db'.
-jest.mock('../../src/config/db', () => ({
+jest.mock('../../../src/config/db', () => ({
   __esModule: true,
   db: jest.fn(),
 }));

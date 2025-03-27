@@ -1,4 +1,4 @@
-import { computeAllowedServicesForFeed } from '../../src/lib/utils/permissions';
+import { computeAllowedServicesForFeed } from '../../../src/lib/utils/permissions';
 
 describe('computeAllowedServicesForFeed', () => {
   it('should always include "ozone" by default when servicesConfig is empty', async () => {

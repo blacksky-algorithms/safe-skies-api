@@ -1,21 +1,19 @@
-import { buildFeedPermissions } from '../../src/repos/permissions';
-import { ExistingPermission } from '../../src/lib/types/permission';
-import { getModerationServicesConfig } from '../../src/repos/moderation';
-import { computeAllowedServicesForFeed } from '../../src/lib/utils/permissions';
+import { buildFeedPermissions } from '../../../src/repos/permissions';
+import { ExistingPermission } from '../../../src/lib/types/permission';
+import { getModerationServicesConfig } from '../../../src/repos/moderation';
+import { computeAllowedServicesForFeed } from '../../../src/lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import {
   mockServicesConfig,
   mockGetModerationServicesConfig,
-} from '../mocks/permissions.mocks';
+} from '../../mocks/permissions.mocks';
 import {
   sampleExistingPermission,
   sampleGeneratorView,
   sampleGeneratorViewNoDisplayName,
-} from '../fixtures/permissions.fixtures';
+} from '../../fixtures/permissions.fixtures';
 
-// We still mock getModerationServicesConfig (because it queries external resources), but we use
-// the real computeAllowedServicesForFeed. (So do not mock '../../src/lib/utils/permissions'.)
-jest.mock('../../src/repos/moderation', () => ({
+jest.mock('../../../src/repos/moderation', () => ({
   getModerationServicesConfig: jest.fn(),
 }));
 
