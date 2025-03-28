@@ -31,3 +31,20 @@ export const getActorFeeds = async (actor?: string) => {
     throw new Error('Failed to fetch feed generator data.');
   }
 };
+/**
+ *
+ * Retrieves the feed generator data for a given feed.
+ * @param feed the uri
+ */
+
+export const getFeedGenerator = async (feed: string) => {
+  try {
+    const response = await AtprotoAgent.app.bsky.feed.getFeedGenerator({
+      feed,
+    });
+    return response.data.view;
+  } catch (error) {
+    console.error('Error fetching feed generator data:', error);
+    throw new Error('Failed to fetch feed generator data.');
+  }
+};

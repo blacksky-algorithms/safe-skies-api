@@ -6,8 +6,9 @@ import {
   reportToOzone,
 } from '../repos/moderation';
 
-import { createModerationLog, customServiceGate } from '../repos/permissions';
+import { customServiceGate } from '../repos/permissions';
 import { Report } from '../lib/types/moderation';
+import { createModerationLog } from '../repos/logs';
 
 export const getReportOptions = async (
   req: Request,
