@@ -22,7 +22,7 @@ export class StateStore {
 
       const rawState = row.state;
 
-      let parsedState: any;
+      let parsedState;
       if (typeof rawState === 'string') {
         try {
           parsedState = JSON.parse(rawState);
@@ -59,6 +59,7 @@ export class StateStore {
         .onConflict('key')
         .merge({ state: encryptedState });
     } catch (error) {
+      console.error('StateStore.set error:', error);
       throw error;
     }
   }
@@ -95,7 +96,7 @@ export class SessionStore {
 
       const rawSession = row.session;
 
-      let parsedSession: any;
+      let parsedSession;
       if (typeof rawSession === 'string') {
         try {
           parsedSession = JSON.parse(rawSession);

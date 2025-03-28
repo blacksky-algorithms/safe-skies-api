@@ -18,7 +18,12 @@ export const promoteModerator = async (
       return;
     }
 
-    const { targetUserDid, uri, feedName, metadata } = req.body;
+    const {
+      targetUserDid,
+      uri,
+      feedName,
+      // metadata TODO: pass to logs in setFeedRole
+    } = req.body;
     if (!targetUserDid || !uri || !feedName) {
       res.status(400).json({ error: 'Missing required fields' });
       return;

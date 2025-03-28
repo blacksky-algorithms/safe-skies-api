@@ -1,9 +1,5 @@
-import mockKnex, { Tracker } from 'mock-knex';
-import { db } from './src/config/db';
-
-mockKnex.mock(db);
-
-const tracker: Tracker = mockKnex.getTracker();
-tracker.install();
-
-export { tracker };
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/test/**/*.test.ts'],
+};
