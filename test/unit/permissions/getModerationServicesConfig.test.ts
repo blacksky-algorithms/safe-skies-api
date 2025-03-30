@@ -1,73 +1,68 @@
-import { getModerationServicesConfig } from '../../../src/repos/moderation';
-import { db } from '../../../src/config/db';
-import NodeCache from 'node-cache';
-import { sampleModerationServices } from '../../fixtures/permissions.fixtures';
+import { mockDb, setupDbMocks } from '../../mocks/db.mocks';
 import {
-  createMockCache,
-  createMockDb,
-  createMockDbReject,
-} from '../../mocks/permissions.mocks';
+  mockCacheGet,
+  mockCacheSet,
+  setupNodeCacheMocks,
+} from '../../mocks/cache.mocks';
+import { sampleModerationServices } from '../../fixtures/permissions.fixtures';
 
-// Mock NodeCache using our helper.
-jest.mock('node-cache', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    set: jest.fn(),
-  }));
-});
+// Setup mocks before importing
+setupNodeCacheMocks();
+setupDbMocks();
 
-// Mock the database module using the named export 'db'.
-jest.mock('../../../src/config/db', () => ({
-  __esModule: true,
-  db: jest.fn(),
-}));
+// Import after setting up mocks
+import { getModerationServicesConfig } from '../../../src/repos/moderation';
 
 describe('getModerationServicesConfig', () => {
-  let cacheInstance: ReturnType<typeof createMockCache>;
-
   beforeEach(() => {
-    jest.resetModules();
-    const NodeCacheMock = NodeCache as unknown as jest.MockedClass<
-      typeof NodeCache
-    >;
-    cacheInstance = NodeCacheMock.mock.results[0].value;
+    jest.clearAllMocks();
   });
 
   it('should return cached value if available', async () => {
-    cacheInstance.get.mockReturnValue(sampleModerationServices);
+    // Setup cache to return a value
+    mockCacheGet.mockReturnValue(sampleModerationServices);
 
     const result = await getModerationServicesConfig();
 
     expect(result).toEqual(sampleModerationServices);
-    expect(db).not.toHaveBeenCalled();
+    expect(mockDb).not.toHaveBeenCalled();
   });
 
   it('should query the database and cache the result if not in cache', async () => {
-    cacheInstance.get.mockReturnValue(undefined);
-    (db as unknown as jest.Mock).mockImplementation(
-      createMockDb(sampleModerationServices)
-    );
+    // Setup cache to not return a value
+    mockCacheGet.mockReturnValue(null);
+
+    // Setup database to return sample data
+    mockDb.mockReturnValue({
+      select: jest.fn().mockResolvedValue(sampleModerationServices),
+    });
 
     const result = await getModerationServicesConfig();
 
     expect(result).toEqual(sampleModerationServices);
-    expect(cacheInstance.set).toHaveBeenCalledWith(
+    expect(mockDb).toHaveBeenCalledWith('moderation_services');
+    expect(mockCacheSet).toHaveBeenCalledWith(
       'moderationServices',
       sampleModerationServices
     );
-    expect(db).toHaveBeenCalledWith('moderation_services');
   });
 
   it('should throw an error if the database query fails', async () => {
-    cacheInstance.get.mockReturnValue(undefined);
-    (db as unknown as jest.Mock).mockImplementation(
-      createMockDbReject(new Error('DB Error'))
-    );
+    // Setup cache to not return a value
+    mockCacheGet.mockReturnValue(null);
+
+    // Setup database to throw an error
+    const testError = new Error('DB Error');
+    mockDb.mockReturnValue({
+      select: jest.fn().mockRejectedValue(testError),
+    });
+
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
     await expect(getModerationServicesConfig()).rejects.toThrow('DB Error');
+    expect(consoleSpy).toHaveBeenCalled();
 
     consoleSpy.mockRestore();
   });

@@ -30,14 +30,12 @@ export const sampleExistingPermission: ExistingPermission = {
 export const sampleModerationServices = [
   {
     value: 'ozone',
-    label: 'Ozone',
-    feed_gen_endpoint: null,
-    admin_did: 'admin1',
+    label: 'Ozone Moderation Service',
+    admin_did: null,
   },
   {
-    value: 'custom',
-    label: 'Custom Service',
-    feed_gen_endpoint: 'http://example.com',
-    admin_did: 'admin2',
+    admin_did: 'did:plc:w4xbfzo7kqfes5zb7r6qv3rw',
+    label: 'Blacksky Moderation Service',
+    value: 'blacksky',
   },
 ];

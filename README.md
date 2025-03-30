@@ -1,7 +1,6 @@
 # SAFEskies API :shield:
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Stability: Alpha](https://img.shields.io/badge/Stability-Alpha-orange.svg)]()
 
 SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environment)—a Node.js/Express API that handles authentication, profile management, feed permissions, and moderation/reporting for the SAFEskies project. This API uses PostgreSQL (or a Supabase instance) for persistence and provides endpoints for OAuth authentication with BlueSky (Atproto), as well as endpoints to report posts, manage moderation, and more.
 
@@ -13,7 +12,6 @@ SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environme
   - [Table of Contents](#table-of-contents)
   - [⚠️ Stability Warning](#️-stability-warning)
   - [Features](#features)
-  - [Project Structure](#project-structure)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -24,10 +22,16 @@ SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environme
       - [Managing Backups](#managing-backups)
       - [Restoration Process](#restoration-process)
   - [Running the Server](#running-the-server)
+    - [Local OAuth Development](#local-oauth-development)
     - [Available Scripts](#available-scripts)
   - [API Endpoints](#api-endpoints)
     - [Authentication](#authentication)
     - [Moderation / Reporting](#moderation--reporting)
+  - [Testing](#testing)
+    - [Testing Strategy](#testing-strategy)
+    - [Test Structure](#test-structure)
+    - [Mocking Pattern](#mocking-pattern)
+    - [Running Tests](#running-tests)
   - [Development Tools](#development-tools)
   - [Contributing](#contributing)
     - [Current Contribution Priorities](#current-contribution-priorities)
@@ -62,61 +66,6 @@ We encourage testing and feedback but recommend caution when using SAFEskies API
   Serves OAuth client metadata for discovery.
 - **Automated Backups:**  
   Creates automatic backups during schema migrations with easy restoration options.
-
-## Project Structure
-
-Below is the directory structure for the project:
-
-```
-├── Dockerfile                   # Docker configuration for containerizing the app
-├── README.md                    # Project documentation (this file)
-├── knexfile.ts                  # Knex configuration (TypeScript)
-├── migrate-config.js            # Configuration for database migrations
-├── migrations                   # Database migration scripts in TypeScript
-│   ├── 20250222103043_initial_schema.ts
-│   └── 20250223_add_unique_constraint_to_feed_permissions.ts
-├── package-lock.json            # npm dependency lock file
-├── package.json                 # Project dependencies, scripts, and metadata
-├── src                          # Source code (TypeScript)
-│   ├── config                   # App configuration files
-│   │   ├── db.ts                # Database connection and configuration
-│   │   └── index.ts             # Centralized export for configurations
-│   ├── controllers              # Express controllers handling API logic
-│   │   ├── auth.controller.ts   # Authentication endpoints
-│   │   ├── dev.controller.ts    # Development-only endpoints
-│   │   ├── feed.controller.ts   # Feed-related endpoints
-│   │   ├── logs.controller.ts   # Moderation logs endpoints
-│   │   ├── moderation.controller.ts   # Moderation and reporting endpoints
-│   │   ├── permissions.controller.ts  # Permissions and role management endpoints
-│   │   └── profile.controller.ts      # User profile management endpoints
-│   ├── lib                      # Utility libraries and types
-│   │   ├── constants            # Application constants (e.g., default feed, moderation options)
-│   │   ├── types                # TypeScript type definitions
-│   │   └── utils                # Helper functions and utilities
-│   ├── middleware               # Express middleware functions
-│   │   ├── auth.middleware.ts   # Authentication (JWT verification) middleware
-│   │   └── dev-only.middleware.ts # Middleware for development-only routes
-│   ├── repos                    # Repository layer for direct DB access and business logic
-│   │   ├── atproto.ts           # Atproto agent configuration and API wrappers
-│   │   ├── feed.ts              # Data access for feed permissions and feeds
-│   │   ├── logs.ts              # Data access for moderation logs
-│   │   ├── moderation.ts        # Reporting and moderation helper functions
-│   │   ├── oauth-client.ts      # OAuth client setup
-│   │   ├── permissions.ts       # Data access for permissions and roles
-│   │   ├── profile.ts           # Data access for user profiles
-│   │   └── storage.ts           # Session storage and encryption functionality
-│   ├── routes                   # Express route definitions
-│   │   ├── auth.ts              # Authentication routes
-│   │   ├── clientMetadata.ts    # OAuth client metadata endpoint
-│   │   ├── dev.ts               # Development routes
-│   │   ├── feeds.ts             # Feed-related routes
-│   │   ├── logs.ts              # Moderation logs routes
-│   │   ├── moderation.ts        # Moderation/reporting routes
-│   │   ├── permissions.ts       # Permissions and role management routes
-│   │   └── profile.ts           # Profile management routes
-│   └── server.ts                # Express server entry point
-└── tsconfig.json                # TypeScript configuration
-```
 
 ## Setup
 
@@ -157,15 +106,30 @@ PGUSER=your_PGUSER
 PGPASSWORD=your_PGPASSWORD
 PGHOST=your_PGHOST
 PGDATABASE=your_PGDATABASE
-PGPORT=5432
+PGPORT=your_PGPORT
 
-ENCRYPTION_KEY=your_base64_encoded_32_byte_key
 
-NEXT_PUBLIC_URL=https://your-backend-url.com
+# Encryption key must be a base64-encoded 32-byte key
+ENCRYPTION_KEY=your_base64_32byte_key
 
+# BlueSky / Atproto configuration
+BSKY_BASE_API_URL=https://api.bsky.app
+
+
+# Client URL to which users are redirected after authentication
 CLIENT_URL=https://your-frontend-url.com
 
-JWT_SECRET=your_jwt_secret_key
+# Base URL for the backend server
+BASE_URL=https://your-backend-url.com
+
+# JWT secret key for token exchange with client
+JWT_SECRET=
+
+# RSKY Feedgen URL
+RSKY_FEEDGEN=
+
+# RSKY API Key
+RSKY_API_KEY=
 ```
 
 ### Database Migrations
@@ -261,6 +225,32 @@ npm run build
 
 When running in development mode with `npm run dev`, ts-node-dev will automatically restart the server when changes are made. The server will run on the port specified in your `.env` file (default is 5000).
 
+### Local OAuth Development
+
+For OAuth development locally, you'll need to expose your local server to the public internet:
+
+1. **Using ngrok**:
+
+   ```bash
+   # Install ngrok globally
+   npm install -g ngrok
+
+   # Expose your local server
+   ngrok http 5000
+   ```
+
+2. **Update your environment variables**:
+
+   ```
+   NEXT_PUBLIC_URL=https://your-ngrok-url.ngrok.io
+   ```
+
+3. **Configure BlueSky OAuth**:
+   - Update your BlueSky OAuth client's callback URL to match your ngrok URL
+   - Set appropriate scopes (basic profile access is sufficient for most cases)
+
+This setup allows OAuth providers to redirect back to your local development environment, which is essential for testing the authentication flow.
+
 ### Available Scripts
 
 - `npm run dev`: Starts the development server with auto-reloading.
@@ -317,6 +307,106 @@ When running in development mode with `npm run dev`, ts-node-dev will automatica
   Returns a summary of the processing of each report.
 
 **TODO:** Add detailed API documentation for each endpoint.
+
+## Testing
+
+SAFEskies API uses Jest for unit testing with a structured mocking pattern to ensure consistent and maintainable tests.
+
+### Testing Strategy
+
+The testing approach focuses on:
+
+- **Unit tests** for individual functions and modules
+- **Isolated testing** using comprehensive mocks
+- **Centralized mock definitions** for consistency and reusability
+- **Clear setup patterns** that follow a consistent structure
+
+### Test Structure
+
+Tests are organized in the `test` directory with fixtures containing sample data, centralized mock definitions for various modules (database, API, auth, etc.), and unit tests organized by module. This structure ensures tests are maintainable and consistent across the codebase.
+
+### Mocking Pattern
+
+The project follows a consistent mocking pattern:
+
+1. **Centralized mock definitions**:
+
+   ```typescript
+   // Example from db.mocks.ts
+   export const mockDbSelect = jest.fn().mockReturnThis();
+   export const mockDbWhere = jest.fn();
+   export const mockDb = jest.fn().mockReturnValue({
+     select: mockDbSelect,
+     where: mockDbWhere,
+   });
+
+   // Helper function to set up successful query
+   export const setupSuccessfulQuery = (returnValue: unknown[]): void => {
+     mockDbWhere.mockResolvedValue(returnValue);
+   };
+
+   // Helper function to set up failed query
+   export const setupFailedQuery = (error: Error): void => {
+     mockDbWhere.mockRejectedValue(error);
+   };
+
+   // Setup function
+   export const setupDbMocks = (): void => {
+     jest.mock('../../src/config/db', () => ({
+       db: mockDb,
+     }));
+   };
+   ```
+
+2. **Consistent test file structure**:
+
+   ```typescript
+   import {
+     mockDb,
+     setupSuccessfulQuery,
+     setupDbMocks,
+   } from '../../mocks/db.mocks';
+
+   // Setup mocks before importing the module under test
+   setupDbMocks();
+
+   // Import after setting up mocks
+   import { myFunction } from '../../../src/repos/myModule';
+
+   describe('myFunction', () => {
+     beforeEach(() => {
+       jest.clearAllMocks();
+     });
+
+     afterAll(() => {
+       jest.restoreAllMocks();
+     });
+
+     it('should return expected data', async () => {
+       setupSuccessfulQuery([{ data: 'test' }]);
+
+       const result = await myFunction();
+
+       expect(mockDb).toHaveBeenCalledWith('table_name');
+       expect(result).toEqual([{ data: 'test' }]);
+     });
+   });
+   ```
+
+### Running Tests
+
+Run the test suite with one of the following commands:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (during development)
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
 
 ## Development Tools
 
@@ -377,6 +467,7 @@ SAFEskies welcomes community contributions, but please note our current developm
    - Include comments for complex logic
    - Add tests for new functionality
    - Update documentation to reflect changes
+   - Follow the established testing and mocking patterns
 
 5. **Pull Request Process**:
    - Ensure all tests pass
