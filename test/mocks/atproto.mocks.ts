@@ -1,4 +1,3 @@
-// test/mocks/atproto.mocks.ts
 export const mockAtprotoAgent = {
   getProfile: jest.fn().mockResolvedValue({
     success: true,
@@ -44,4 +43,35 @@ export const mockFeedsByRole = {
   ],
   mod: [{ uri: 'feed:3', feed_name: 'Mod Feed 1', admin_did: 'admin3' }],
   user: [],
+};
+
+export const mockGetFeedsByRole = jest.fn().mockImplementation((did, role) => {
+  if (role === 'admin') {
+    return Promise.resolve(mockFeedsByRole.admin);
+  }
+  if (role === 'mod') {
+    return Promise.resolve(mockFeedsByRole.mod);
+  }
+  return Promise.resolve(mockFeedsByRole.user);
+});
+
+export const mockGetActorFeeds = jest.fn().mockResolvedValue(mockActorFeeds);
+
+export const mockGetFeedGenerator = jest
+  .fn()
+  .mockResolvedValue(mockFeedGenerator);
+
+// Helper to setup all mocks at once
+export const setupAtprotoMocks = () => {
+  jest
+    .spyOn(require('../../src/repos/feed'), 'getFeedsByRole')
+    .mockImplementation(mockGetFeedsByRole);
+
+  jest
+    .spyOn(require('../../src/repos/atproto'), 'getActorFeeds')
+    .mockImplementation(mockGetActorFeeds);
+
+  jest
+    .spyOn(require('../../src/repos/atproto'), 'getFeedGenerator')
+    .mockImplementation(mockGetFeedGenerator);
 };

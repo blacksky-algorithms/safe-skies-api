@@ -1,65 +1,33 @@
-import { Request, Response } from 'express';
+import {
+  mockBlueskyOAuthClient,
+  mockAtprotoAgent,
+  mockGetActorFeeds,
+  mockGetProfile,
+  mockSaveProfile,
+  mockJwtSign,
+  setupAuthMocks,
+} from '../../mocks/auth.mocks';
+
+setupAuthMocks();
+
+// Import controllers after setting up mocks
 import {
   signin,
   logout,
   callback,
 } from '../../../src/controllers/auth.controller';
-
-jest.mock('../../../src/repos/oauth-client', () => {
-  const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
-  return {
-    BlueskyOAuthClient: mockBlueskyOAuthClient,
-  };
-});
-
-jest.mock('../../../src/repos/atproto', () => {
-  const {
-    mockAtprotoAgent,
-    mockGetActorFeeds,
-  } = require('../../mocks/auth.mocks');
-  return {
-    AtprotoAgent: mockAtprotoAgent,
-    getActorFeeds: mockGetActorFeeds,
-  };
-});
-
-jest.mock('../../../src/repos/profile', () => {
-  const { mockGetProfile, mockSaveProfile } = require('../../mocks/auth.mocks');
-  return {
-    getProfile: mockGetProfile,
-    saveProfile: mockSaveProfile,
-  };
-});
-
-jest.mock('jsonwebtoken', () => {
-  const { mockJwtSign } = require('../../mocks/auth.mocks');
-  return {
-    sign: mockJwtSign,
-  };
-});
-
-// Helper functions for creating Express request/response objects.
-const createMockRequest = (overrides?: Partial<Request>): Request => {
-  return {
-    query: {},
-    body: {},
-    params: {},
-    ...overrides,
-  } as Request;
-};
-
-const createMockResponse = (): Response => {
-  const res: Partial<Response> = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.redirect = jest.fn().mockReturnValue(res);
-  res.clearCookie = jest.fn().mockReturnValue(res);
-  return res as Response;
-};
+import {
+  createMockRequest,
+  createMockResponse,
+} from '../../mocks/express.mock';
 
 describe('Auth Controller', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   describe('signin', () => {
@@ -78,8 +46,7 @@ describe('Auth Controller', () => {
       const res = createMockResponse();
       const fakeUrl = new URL('http://example.com');
 
-      const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
-      mockBlueskyOAuthClient.authorize.mockResolvedValue(fakeUrl);
+      mockBlueskyOAuthClient.authorize.mockResolvedValueOnce(fakeUrl);
 
       await signin(req, res);
 
@@ -119,29 +86,21 @@ describe('Auth Controller', () => {
     it('should process a valid callback and redirect with a token', async () => {
       const req = createMockRequest({ query: { code: 'abc', state: '123' } });
       const res = createMockResponse();
-      const {
-        mockBlueskyOAuthClient,
-        mockAtprotoAgent,
-        mockGetActorFeeds,
-        mockGetProfile,
-        mockSaveProfile,
-        mockJwtSign,
-      } = require('../../mocks/auth.mocks');
 
-      const fakeSession = { sub: 'did:example:123' };
-      mockBlueskyOAuthClient.callback.mockResolvedValue({
-        session: fakeSession,
-      });
+      const fakeSession = { session: { sub: 'did:example:123' } };
+      mockBlueskyOAuthClient.callback.mockResolvedValueOnce(fakeSession);
 
       const fakeProfileData = {
         did: 'did:example:123',
         handle: 'testHandle',
         displayName: 'Test User',
       };
-      mockAtprotoAgent.getProfile.mockResolvedValue({
+
+      mockAtprotoAgent.getProfile.mockResolvedValueOnce({
         success: true,
         data: fakeProfileData,
       });
+
       const fakeFeeds = {
         feeds: [
           {
@@ -151,10 +110,11 @@ describe('Auth Controller', () => {
           },
         ],
       };
-      mockGetActorFeeds.mockResolvedValue(fakeFeeds);
-      mockSaveProfile.mockResolvedValue(true);
-      mockGetProfile.mockResolvedValue(fakeProfileData);
-      mockJwtSign.mockReturnValue('fake.jwt.token');
+
+      mockGetActorFeeds.mockResolvedValueOnce(fakeFeeds);
+      mockSaveProfile.mockResolvedValueOnce(true);
+      mockGetProfile.mockResolvedValueOnce(fakeProfileData);
+      mockJwtSign.mockReturnValueOnce('fake.jwt.token');
 
       await callback(req, res);
 
@@ -168,13 +128,12 @@ describe('Auth Controller', () => {
       const req = createMockRequest({ query: { code: 'abc', state: '123' } });
       const res = createMockResponse();
       process.env.CLIENT_URL = 'http://client.com';
-      const { mockBlueskyOAuthClient } = require('../../mocks/auth.mocks');
 
       const consoleSpy = jest
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      mockBlueskyOAuthClient.callback.mockRejectedValue(
+      mockBlueskyOAuthClient.callback.mockRejectedValueOnce(
         new Error('Test error')
       );
 

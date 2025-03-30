@@ -1,27 +1,25 @@
-// test/unit/feeds/updateFeedNameIfChanged.test.ts
+import {
+  mockDb,
+  mockDbWhere,
+  mockDbUpdate,
+  setupDbMocks,
+} from '../../mocks/db.mocks';
+
+import { mockCreateFeedGenLog, setupLogsMocks } from '../../mocks/logs.mocks';
+
+// Set up mocks before importing the function
+setupDbMocks();
+setupLogsMocks();
+
+// Import after setting up mocks
 import { updateFeedNameIfChanged } from '../../../src/repos/feed';
-import { createFeedGenLog } from '../../../src/repos/logs';
-
-// Create mock functions outside the mock setup
-const mockUpdate = jest.fn().mockResolvedValue([1]);
-const mockWhere = jest.fn().mockReturnValue({ update: mockUpdate });
-const mockDb = jest.fn().mockImplementation(() => ({ where: mockWhere }));
-
-// Mock the dependencies
-jest.mock('../../../src/config/db', () => ({
-  db: (table: string) => {
-    mockDb(table);
-    return { where: mockWhere };
-  },
-}));
-
-jest.mock('../../../src/repos/logs', () => ({
-  createFeedGenLog: jest.fn(),
-}));
 
 describe('updateFeedNameIfChanged', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set up the mock chain properly
+    mockDbWhere.mockReturnValue({ update: mockDbUpdate });
   });
 
   afterAll(() => {
@@ -34,16 +32,19 @@ describe('updateFeedNameIfChanged', () => {
     const localName = 'Old Feed Name';
     const newName = 'New Feed Name';
 
+    // Set up mock return value
+    mockDbUpdate.mockResolvedValue([1]);
+
     // Call the function
     await updateFeedNameIfChanged(did, uri, localName, newName);
 
     // Verify database interactions
     expect(mockDb).toHaveBeenCalledWith('feed_permissions');
-    expect(mockWhere).toHaveBeenCalledWith({ did, uri });
-    expect(mockUpdate).toHaveBeenCalledWith({ feed_name: newName });
+    expect(mockDbWhere).toHaveBeenCalledWith({ did, uri });
+    expect(mockDbUpdate).toHaveBeenCalledWith({ feed_name: newName });
 
     // Verify log was created
-    expect(createFeedGenLog).toHaveBeenCalledWith({
+    expect(mockCreateFeedGenLog).toHaveBeenCalledWith({
       uri,
       previous: localName,
       current: newName,
@@ -59,8 +60,10 @@ describe('updateFeedNameIfChanged', () => {
 
     await updateFeedNameIfChanged(did, uri, localName, newName);
 
+    // Verify no database interactions
     expect(mockDb).not.toHaveBeenCalled();
 
-    expect(createFeedGenLog).not.toHaveBeenCalled();
+    // Verify no log was created
+    expect(mockCreateFeedGenLog).not.toHaveBeenCalled();
   });
 });
