@@ -16,13 +16,6 @@ export const mockServicesConfig: ModerationService[] = [
   },
 ];
 
-// A mock implementation for getModerationServicesConfig that returns our fixed configuration.
-export const mockGetModerationServicesConfig = async (): Promise<
-  ModerationService[]
-> => {
-  return mockServicesConfig;
-};
-
 /**
  * Returns a new object representing a mocked NodeCache instance.
  */
@@ -64,5 +57,16 @@ export const createMockDb = <T>(fakeServices: T): jest.Mock => {
 export const createMockDbReject = (error: Error): jest.Mock => {
   return jest.fn().mockImplementation(() => ({
     select: jest.fn().mockRejectedValue(error),
+  }));
+};
+
+/**
+ * Setup function to mock the moderation services module
+ */
+export const setupModerationServicesMocks = (): void => {
+  jest.mock('../../src/repos/moderation', () => ({
+    getModerationServicesConfig: jest
+      .fn()
+      .mockResolvedValue(mockServicesConfig),
   }));
 };

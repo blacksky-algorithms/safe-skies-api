@@ -1,11 +1,8 @@
-import { buildFeedPermissions } from '../../../src/repos/permissions';
 import { ExistingPermission } from '../../../src/lib/types/permission';
-import { getModerationServicesConfig } from '../../../src/repos/moderation';
-import { computeAllowedServicesForFeed } from '../../../src/lib/utils/permissions';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import {
   mockServicesConfig,
-  mockGetModerationServicesConfig,
+  setupModerationServicesMocks,
 } from '../../mocks/permissions.mocks';
 import {
   sampleExistingPermission,
@@ -13,19 +10,18 @@ import {
   sampleGeneratorViewNoDisplayName,
 } from '../../fixtures/permissions.fixtures';
 
-jest.mock('../../../src/repos/moderation', () => ({
-  getModerationServicesConfig: jest.fn(),
-}));
+// Call setup function before importing the modules being tested
+setupModerationServicesMocks();
 
-beforeEach(() => {
-  jest.resetAllMocks();
-  // Override getModerationServicesConfig to return our fixed configuration.
-  (getModerationServicesConfig as jest.Mock).mockImplementation(
-    mockGetModerationServicesConfig
-  );
-});
+// Now import the modules
+import { buildFeedPermissions } from '../../../src/repos/permissions';
+import { getModerationServicesConfig } from '../../../src/repos/moderation';
+import { computeAllowedServicesForFeed } from '../../../src/lib/utils/permissions';
 
 describe('buildFeedPermissions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   it('should build permissions for created feeds only', async () => {
     const userDid = 'user:123';
     const createdFeeds: GeneratorView[] = [sampleGeneratorView];
