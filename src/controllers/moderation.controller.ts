@@ -53,11 +53,11 @@ export const getModerationServices = async (
  * Processes a single moderation report.
  * Returns an object containing the report payload, status, and details from processing each service and logging.
  */
-async function processReport(
+export const processReport = async (
   report: Report,
   idx: number,
   actingUser: { did: string }
-) {
+) => {
   // Build the payload and override performed_by with actingUser.did
   const payload = {
     targetedPostUri: report.targetedPostUri,
@@ -171,7 +171,7 @@ async function processReport(
   }
 
   return { report: payload, status: 'success', details: resultDetails };
-}
+};
 
 /**
  * Processes a bulk array of moderation reports. For each report, the function:

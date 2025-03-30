@@ -311,9 +311,10 @@ export async function customServiceGate(
   try {
     const services = await getModerationServicesConfig();
     const service = services.find((s) => s.value === serviceValue);
+
     if (!service || !service.admin_did) {
       // If there’s no specific admin_did configured, default to allowing the service.
-      return true;
+      return false;
     }
     // Check if the feed URI includes the service's admin_did.
     return feedUri.includes(service.admin_did);

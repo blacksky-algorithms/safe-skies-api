@@ -1,12 +1,4 @@
-import {
-  mockBlueskyOAuthClient,
-  mockAtprotoAgent,
-  mockGetActorFeeds,
-  mockGetProfile,
-  mockSaveProfile,
-  mockJwtSign,
-  setupAuthMocks,
-} from '../../mocks/auth.mocks';
+import { mockBlueskyOAuthClient, setupAuthMocks } from '../../mocks/auth.mocks';
 
 setupAuthMocks();
 
@@ -90,32 +82,6 @@ describe('Auth Controller', () => {
       const fakeSession = { session: { sub: 'did:example:123' } };
       mockBlueskyOAuthClient.callback.mockResolvedValueOnce(fakeSession);
 
-      const fakeProfileData = {
-        did: 'did:example:123',
-        handle: 'testHandle',
-        displayName: 'Test User',
-      };
-
-      mockAtprotoAgent.getProfile.mockResolvedValueOnce({
-        success: true,
-        data: fakeProfileData,
-      });
-
-      const fakeFeeds = {
-        feeds: [
-          {
-            uri: 'feed:1',
-            displayName: 'Feed One',
-            creator: { did: 'admin1' },
-          },
-        ],
-      };
-
-      mockGetActorFeeds.mockResolvedValueOnce(fakeFeeds);
-      mockSaveProfile.mockResolvedValueOnce(true);
-      mockGetProfile.mockResolvedValueOnce(fakeProfileData);
-      mockJwtSign.mockReturnValueOnce('fake.jwt.token');
-
       await callback(req, res);
 
       expect(res.redirect).toHaveBeenCalled();
@@ -127,7 +93,6 @@ describe('Auth Controller', () => {
     it('should redirect to login with error on failure', async () => {
       const req = createMockRequest({ query: { code: 'abc', state: '123' } });
       const res = createMockResponse();
-      process.env.CLIENT_URL = 'http://client.com';
 
       const consoleSpy = jest
         .spyOn(console, 'error')

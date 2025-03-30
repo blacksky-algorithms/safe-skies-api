@@ -1,4 +1,10 @@
 import { Request, Response } from 'express';
+interface CustomRequest extends Request {
+  user: {
+    did: string;
+    handle: string;
+  };
+}
 
 // Mock response functions
 export const mockJson = jest.fn().mockReturnThis();
@@ -7,13 +13,16 @@ export const mockRedirect = jest.fn().mockReturnThis();
 export const mockClearCookie = jest.fn().mockReturnThis();
 
 // Helper functions for creating Express request/response objects
-export const createMockRequest = (overrides?: Partial<Request>): Request => {
+export const createMockRequest = (
+  overrides?: Partial<CustomRequest>
+): Request => {
   return {
+    cookies: {},
     query: {},
     body: {},
     params: {},
     ...overrides,
-  } as Request;
+  } as CustomRequest;
 };
 
 export const createMockResponse = (): Response => {

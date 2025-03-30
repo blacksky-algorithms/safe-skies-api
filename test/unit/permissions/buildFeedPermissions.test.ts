@@ -2,7 +2,7 @@ import { ExistingPermission } from '../../../src/lib/types/permission';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import {
   mockServicesConfig,
-  setupModerationServicesMocks,
+  setupPermissionsMocks,
 } from '../../mocks/permissions.mocks';
 import {
   sampleExistingPermission,
@@ -11,7 +11,7 @@ import {
 } from '../../fixtures/permissions.fixtures';
 
 // Call setup function before importing the modules being tested
-setupModerationServicesMocks();
+setupPermissionsMocks();
 
 // Now import the modules
 import { buildFeedPermissions } from '../../../src/repos/permissions';
