@@ -1,10 +1,4 @@
-import {
-  mockDb,
-  mockDbWhere,
-  mockDbUpdate,
-  setupDbMocks,
-} from '../../mocks/db.mocks';
-
+import { tracker, setupDbMocks, cleanupDbMocks } from '../../mocks/db.mocks';
 import { mockCreateFeedGenLog, setupLogsMocks } from '../../mocks/logs.mocks';
 
 // Set up mocks before importing the function
@@ -17,12 +11,15 @@ import { updateFeedNameIfChanged } from '../../../src/repos/feed';
 describe('updateFeedNameIfChanged', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    tracker.install();
+  });
 
-    // Set up the mock chain properly
-    mockDbWhere.mockReturnValue({ update: mockDbUpdate });
+  afterEach(() => {
+    tracker.uninstall();
   });
 
   afterAll(() => {
+    cleanupDbMocks();
     jest.restoreAllMocks();
   });
 
@@ -32,16 +29,21 @@ describe('updateFeedNameIfChanged', () => {
     const localName = 'Old Feed Name';
     const newName = 'New Feed Name';
 
-    // Set up mock return value
-    mockDbUpdate.mockResolvedValue([1]);
+    // Set up mock response for database update
+    tracker.on('query', function (query) {
+      expect(query.method).toBe('update');
+      // Check if the query is operating on the right table with the right conditions
+      expect(query.sql).toMatch(/update.*feed_permissions/i);
+      expect(query.bindings).toContain(did);
+      expect(query.bindings).toContain(uri);
+      expect(query.bindings).toContain(newName);
+
+      // Respond with one row affected
+      query.response([1]);
+    });
 
     // Call the function
     await updateFeedNameIfChanged(did, uri, localName, newName);
-
-    // Verify database interactions
-    expect(mockDb).toHaveBeenCalledWith('feed_permissions');
-    expect(mockDbWhere).toHaveBeenCalledWith({ did, uri });
-    expect(mockDbUpdate).toHaveBeenCalledWith({ feed_name: newName });
 
     // Verify log was created
     expect(mockCreateFeedGenLog).toHaveBeenCalledWith({
@@ -58,10 +60,16 @@ describe('updateFeedNameIfChanged', () => {
     const localName = 'Same Feed Name';
     const newName = 'Same Feed Name';
 
+    // Set up a spy to count query events
+    let queryCount = 0;
+    tracker.on('query', function () {
+      queryCount++;
+    });
+
     await updateFeedNameIfChanged(did, uri, localName, newName);
 
-    // Verify no database interactions
-    expect(mockDb).not.toHaveBeenCalled();
+    // Verify no database interactions occurred
+    expect(queryCount).toBe(0);
 
     // Verify no log was created
     expect(mockCreateFeedGenLog).not.toHaveBeenCalled();

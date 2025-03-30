@@ -14,7 +14,7 @@ setupDbMocks();
 import { getModerationServicesConfig } from '../../../src/repos/moderation';
 
 describe('getModerationServicesConfig', () => {
-  // Keep track of query count manually
+  // Keep track of query count with our own counter
   let queryCount = 0;
 
   beforeEach(() => {
@@ -24,12 +24,11 @@ describe('getModerationServicesConfig', () => {
   });
 
   afterEach(() => {
-    // Reset after each test
     tracker.uninstall();
   });
 
   afterAll(() => {
-    cleanupDbMocks(); // Clean up mock-knex
+    cleanupDbMocks();
   });
 
   it('should return cached value if available', async () => {
@@ -39,7 +38,7 @@ describe('getModerationServicesConfig', () => {
     const result = await getModerationServicesConfig();
 
     expect(result).toEqual(sampleModerationServices);
-    // No queries should have been tracked when cache hit
+    // We expect zero queries when cache is hit
     expect(queryCount).toBe(0);
   });
 

@@ -11,13 +11,12 @@ import {
 
 import { setupLogsMocks } from '../../mocks/logs.mocks';
 
-setupLogsMocks();
-setupAtprotoMocks();
-
 import { getEnrichedFeedsForUser } from '../../../src/repos/feed';
 
 describe('getEnrichedFeedsForUser', () => {
   beforeEach(() => {
+    setupLogsMocks();
+    setupAtprotoMocks();
     jest.clearAllMocks();
   });
 

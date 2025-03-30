@@ -1,28 +1,56 @@
-export const mockDbSelect = jest.fn().mockReturnThis();
-export const mockDbWhere = jest.fn();
-export const mockDbUpdate = jest.fn();
+import mockKnex from 'mock-knex';
+import knex from 'knex';
 
-export const mockQueryBuilder = {
-  select: mockDbSelect,
-  where: mockDbWhere,
-  update: mockDbUpdate,
+// Create a knex instance
+export const db = knex({
+  client: 'pg', // or whatever client you're using
+});
+
+// Get the tracker
+export const tracker = mockKnex.getTracker();
+
+// Initialize tracking
+export const setupDbMocks = (): void => {
+  // Attach mock to knex instance
+  mockKnex.mock(db);
+
+  // Initialize tracker
+  tracker.install();
+
+  // Mock the db module
+  jest.mock('../../src/config/db', () => ({
+    db,
+  }));
 };
-
-export const mockDb = jest.fn().mockReturnValue(mockQueryBuilder);
 
 // Helper function to set up successful query
 export const setupSuccessfulQuery = (returnValue: unknown[]): void => {
-  mockDbWhere.mockResolvedValue(returnValue);
+  tracker.on('query', (query) => {
+    query.response(returnValue);
+  });
+};
+
+// Helper function to set up a specific query response
+export const setupQueryResponse = (
+  matcher: RegExp,
+  returnValue: unknown[]
+): void => {
+  tracker.on('query', (query) => {
+    if (query.sql.match(matcher)) {
+      query.response(returnValue);
+    }
+  });
 };
 
 // Helper function to set up failed query
 export const setupFailedQuery = (error: Error): void => {
-  mockDbWhere.mockRejectedValue(error);
+  tracker.on('query', (query) => {
+    query.reject(error);
+  });
 };
 
-// Setup function
-export const setupDbMocks = (): void => {
-  jest.mock('../../src/config/db', () => ({
-    db: mockDb,
-  }));
+// Cleanup function
+export const cleanupDbMocks = (): void => {
+  tracker.uninstall();
+  mockKnex.unmock(db);
 };
