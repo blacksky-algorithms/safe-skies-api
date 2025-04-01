@@ -1,3 +1,6 @@
+import { mockToken } from '../fixtures/auth.fixtures';
+import { mockUser, mockActingAdminUser } from '../fixtures/user.fixtures';
+
 export const mockBlueskyOAuthClient = {
   authorize: jest.fn().mockResolvedValue(new URL('http://example.com')),
   callback: jest.fn(async (params: URLSearchParams) => {
@@ -20,15 +23,14 @@ export const mockGetActorFeeds = jest.fn().mockResolvedValue({
   ],
 });
 
-export const mockGetProfile = jest.fn().mockResolvedValue({
-  did: 'did:example:123',
-  handle: 'testHandle',
-  displayName: 'Test User',
-});
+export const mockGetProfile = jest.fn().mockResolvedValue(mockUser);
 
 export const mockSaveProfile = jest.fn().mockResolvedValue(true);
 
-export const mockJwtSign = jest.fn().mockReturnValue('fake.jwt.token');
+export const mockJwtSign = jest.fn().mockReturnValue(mockToken);
+export const mockJwtVerify = jest
+  .fn()
+  .mockImplementation(() => mockActingAdminUser);
 
 // Setup helper for all auth-related mocks
 export const setupAuthMocks = (): void => {
@@ -43,18 +45,15 @@ export const setupAuthMocks = (): void => {
 
   jest.mock('jsonwebtoken', () => ({
     sign: mockJwtSign,
+    verify: mockJwtVerify,
   }));
   jest.mock('../../src/repos/atproto', () => ({
     AtprotoAgent: {
       // Return a fixed profile based on the actor.
-      getProfile: jest.fn(async (params: { actor: string }) => {
+      getProfile: jest.fn(async () => {
         return {
           success: true,
-          data: {
-            did: params.actor,
-            handle: 'testHandle',
-            displayName: 'Test User',
-          },
+          data: mockUser,
         };
       }),
     },
@@ -64,23 +63,5 @@ export const setupAuthMocks = (): void => {
         { uri: 'feed:1', displayName: 'Feed One', creator: { did: 'admin1' } },
       ],
     })),
-    // getFeedGenerator: jest.fn(async (feed: string) => {
-    //   // Here you define responses based on the feed URI.
-    //   if (feed === 'feed:1') {
-    //     return {
-    //       displayName: 'BlueSky Feed One',
-    //       description: 'Updated Desc 1',
-    //       did: 'did:example:456',
-    //     };
-    //   } else if (feed === 'feed:2') {
-    //     return {
-    //       displayName: 'BlueSky Feed Two',
-    //       description: 'Updated Desc 2',
-    //       did: 'did:example:456',
-    //     };
-    //   }
-    //   // For any other feed, simulate a not found scenario.
-    //   throw new Error('Feed not found');
-    // }),
   }));
 };

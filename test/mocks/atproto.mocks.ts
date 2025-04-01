@@ -1,3 +1,5 @@
+import { mockFeedsByRole } from '../fixtures/feed.fixtures';
+
 export const mockAtprotoAgent = {
   getProfile: jest.fn().mockResolvedValue({
     success: true,
@@ -33,16 +35,6 @@ export const mockActorFeeds = {
       creator: { did: 'admin2' },
     },
   ],
-};
-
-// Mock the getFeedsByRole function
-export const mockFeedsByRole = {
-  admin: [
-    { uri: 'feed:1', feed_name: 'Admin Feed 1', admin_did: 'admin1' },
-    { uri: 'feed:2', feed_name: 'Admin Feed 2', admin_did: 'admin2' },
-  ],
-  mod: [{ uri: 'feed:3', feed_name: 'Mod Feed 1', admin_did: 'admin3' }],
-  user: [],
 };
 
 export const mockGetFeedsByRole = jest.fn().mockImplementation((did, role) => {

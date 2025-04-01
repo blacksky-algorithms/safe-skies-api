@@ -17,11 +17,12 @@ import * as logs from '../../../src/repos/logs';
 
 // Import fixtures
 import {
-  sampleReportOptions,
-  sampleModerationServices,
-  sampleReport,
-  sampleReports,
+  mockReportOptions,
+  mockModerationServices,
+  mockReport,
+  mockReports,
 } from '../../fixtures/moderation.fixtures';
+import { mockUser } from '../../fixtures/user.fixtures';
 
 describe('Moderation Controller', () => {
   let req: Request;
@@ -37,13 +38,13 @@ describe('Moderation Controller', () => {
       // Mock the repository function
       jest
         .spyOn(moderation, 'fetchReportOptions')
-        .mockResolvedValue(sampleReportOptions);
+        .mockResolvedValue(mockReportOptions);
 
       await getReportOptions(req, res);
 
       expect(moderation.fetchReportOptions).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ options: sampleReportOptions });
+      expect(res.json).toHaveBeenCalledWith({ options: mockReportOptions });
     });
 
     it('should handle errors gracefully', async () => {
@@ -64,20 +65,20 @@ describe('Moderation Controller', () => {
   describe('getModerationServices', () => {
     it('should return available moderation services for a feed', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:user', handle: '@user' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: { uri: 'feed:1' },
       });
 
       jest
         .spyOn(moderation, 'fetchModerationServices')
-        .mockResolvedValue(sampleModerationServices);
+        .mockResolvedValue(mockModerationServices);
 
       await getModerationServices(req, res);
 
       expect(moderation.fetchModerationServices).toHaveBeenCalledWith('feed:1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        services: sampleModerationServices,
+        services: mockModerationServices,
       });
     });
 
@@ -97,7 +98,7 @@ describe('Moderation Controller', () => {
 
     it('should return 400 if no feed URI is provided', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:user', handle: '@user' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: {},
       });
 
@@ -130,8 +131,8 @@ describe('Moderation Controller', () => {
 
     it('should process a single report', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:user', handle: '@user' },
-        body: sampleReport,
+        user: { did: mockUser.did, handle: mockUser.handle },
+        body: mockReport,
       });
 
       await reportModerationEvents(req, res);
@@ -146,8 +147,8 @@ describe('Moderation Controller', () => {
 
     it('should process multiple reports', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:user', handle: '@user' },
-        body: sampleReports,
+        user: { did: mockUser.did, handle: mockUser.handle },
+        body: mockReports,
       });
 
       await reportModerationEvents(req, res);
@@ -157,7 +158,7 @@ describe('Moderation Controller', () => {
       const responseData = (res.json as jest.Mock).mock.calls[0][0];
       expect(responseData).toHaveProperty('summary');
       expect(Array.isArray(responseData.summary)).toBe(true);
-      expect(responseData.summary.length).toBe(sampleReports.length);
+      expect(responseData.summary.length).toBe(mockReports.length);
     });
 
     it('should return 401 if no user is authenticated', async () => {
@@ -176,7 +177,7 @@ describe('Moderation Controller', () => {
 
     it('should handle errors gracefully', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:user', handle: '@user' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         body: {},
       });
 

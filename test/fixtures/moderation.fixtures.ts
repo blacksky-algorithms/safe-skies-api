@@ -3,9 +3,26 @@ import {
   ModerationService,
   ModAction,
 } from '../../src/lib/types/moderation';
+import { ModeratorData } from '../../src/lib/types/user';
+
+// Reusable sample configuration for moderation services.
+export const mockServicesConfig: ModerationService[] = [
+  {
+    value: 'ozone',
+    label: 'Ozone',
+    feed_gen_endpoint: null,
+    admin_did: 'admin1',
+  },
+  {
+    value: 'custom',
+    label: 'Custom Service',
+    feed_gen_endpoint: 'http://example.com',
+    admin_did: 'admin2',
+  },
+];
 
 // Sample moderation services for testing
-export const sampleModerationServices: ModerationService[] = [
+export const mockModerationServices: ModerationService[] = [
   {
     value: 'blacksky',
     label: 'Blacksky Moderation',
@@ -21,7 +38,7 @@ export const sampleModerationServices: ModerationService[] = [
 ];
 
 // Sample report options for testing
-export const sampleReportOptions = [
+export const mockReportOptions = [
   { id: 'spam', title: 'Spam', description: 'Spam', reason: 'Spam' },
   {
     id: 'harassment',
@@ -32,10 +49,10 @@ export const sampleReportOptions = [
 ];
 
 // Sample report for testing
-export const sampleReport: Report = {
+export const mockReport: Report = {
   targetedPostUri: 'at://did:example:post/123',
   reason: 'spam',
-  toServices: sampleModerationServices,
+  toServices: mockModerationServices,
   targetedUserDid: 'did:example:target',
   uri: 'feed:1',
   feedName: 'Test Feed',
@@ -46,12 +63,12 @@ export const sampleReport: Report = {
 };
 
 // Sample reports array for multiple report testing
-export const sampleReports: Report[] = [
+export const mockReports: Report[] = [
   {
     targetedPostUri: 'at://did:example:post/123',
     reason: 'spam',
     uri: 'feed:1',
-    toServices: [sampleModerationServices[0]],
+    toServices: [mockModerationServices[0]],
     targetedUserDid: 'did:example:target',
     feedName: 'Test Feed',
     additionalInfo: '',
@@ -63,7 +80,7 @@ export const sampleReports: Report[] = [
     targetedPostUri: 'at://did:example:post/456',
     reason: 'harassment',
     uri: 'feed:1',
-    toServices: [sampleModerationServices[1]],
+    toServices: [mockModerationServices[1]],
     targetedUserDid: 'did:example:target2',
     feedName: 'Test Feed',
     additionalInfo: '',
@@ -72,9 +89,32 @@ export const sampleReports: Report[] = [
     targetedProfile: 'User profile 2',
   },
 ];
-
-// Sample acting user
-export const sampleActingUser = {
-  did: 'did:example:acting',
-  handle: '@acting',
-};
+export const mockModeratorsList: ModeratorData[] = [
+  {
+    did: 'mod1',
+    role: 'mod',
+    uri: 'feed:1',
+    profile: {
+      did: 'mod1',
+      handle: '@mod1',
+    },
+  },
+  {
+    did: 'mod2',
+    role: 'mod',
+    uri: 'feed:1',
+    profile: {
+      did: 'mod2',
+      handle: '@mod2',
+    },
+  },
+  {
+    did: 'mod3',
+    role: 'mod',
+    uri: 'feed:3',
+    profile: {
+      did: 'mod3',
+      handle: '@mod3',
+    },
+  },
+];

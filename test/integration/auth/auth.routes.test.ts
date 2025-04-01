@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../../../src/app';
 import { setupAuthMocks } from '../../mocks/auth.mocks';
+import { mockUser } from '../../fixtures/user.fixtures';
 
 jest.mock('../../../src/repos/oauth-client', () => ({
   BlueskyOAuthClient: {
@@ -14,7 +15,7 @@ jest.mock('../../../src/repos/oauth-client', () => ({
       const code = params.get('code');
       const state = params.get('state');
       if (code === 'validCode' && state === 'validState') {
-        return { session: { sub: 'did:example:123' } };
+        return { session: { sub: mockUser.did } };
       }
       throw new Error('Test error');
     }),
@@ -24,13 +25,7 @@ jest.mock('../../../src/repos/oauth-client', () => ({
 jest.mock('../../../src/repos/profile', () => ({
   getProfile: jest.fn(async () => {
     // If GET_PROFILE_FAIL is set, simulate failure by returning null.
-    return process.env.GET_PROFILE_FAIL === 'true'
-      ? null
-      : {
-          did: 'did:example:123',
-          handle: 'testHandle',
-          displayName: 'Test User',
-        };
+    return process.env.GET_PROFILE_FAIL === 'true' ? null : mockUser;
   }),
   saveProfile: jest.fn(async () => {
     // If SAVE_PROFILE_FAIL is set, simulate failure.
@@ -42,14 +37,10 @@ setupAuthMocks();
 jest.mock('../../../src/repos/atproto', () => ({
   AtprotoAgent: {
     // Return a fixed profile based on the actor.
-    getProfile: jest.fn(async (params: { actor: string }) => {
+    getProfile: jest.fn(async () => {
       return {
         success: true,
-        data: {
-          did: params.actor,
-          handle: 'testHandle',
-          displayName: 'Test User',
-        },
+        data: mockUser,
       };
     }),
   },
@@ -80,7 +71,7 @@ describe('Auth Routes Integration', () => {
     it('should return an authorization URL when handle is provided', async () => {
       const res = await request(app)
         .get('/auth/signin')
-        .query({ handle: 'testHandle' });
+        .query({ handle: mockUser.handle });
       expect(res.status).toBe(200);
       expect(typeof res.body.url).toBe('string');
       expect(res.body.url).toMatch(/^https?:\/\//);

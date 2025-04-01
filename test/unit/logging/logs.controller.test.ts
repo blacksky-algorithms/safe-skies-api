@@ -1,7 +1,7 @@
 import { getLogsController } from '../../../src/controllers/logs.controller';
 import { getUserRoleForFeed } from '../../../src/repos/permissions';
 import { getLogs } from '../../../src/repos/logs';
-import { mockLogEntries, setupLogsMocks } from '../../mocks/logs.mocks';
+import { setupLogsMocks } from '../../mocks/logs.mocks';
 import {
   createMockRequest,
   createMockResponse,
@@ -9,6 +9,8 @@ import {
   mockStatus,
 } from '../../mocks/express.mock';
 import { ModAction } from '../../../src/lib/types/moderation';
+import { mockUser } from '../../fixtures/user.fixtures';
+import { mockLogEntries } from '../../fixtures/logs.fixtures';
 
 // Mock the permissions repository
 jest.mock('../../../src/repos/permissions');
@@ -54,7 +56,7 @@ describe('getLogsController', () => {
   it('should return 400 if uri parameter is missing', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs', // No uri parameter
@@ -74,7 +76,7 @@ describe('getLogsController', () => {
   it('should return 403 if user role is "user"', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs?uri=feed:1',
@@ -87,10 +89,7 @@ describe('getLogsController', () => {
     await getLogsController(req, res);
 
     // Assert
-    expect(mockGetUserRoleForFeed).toHaveBeenCalledWith(
-      'did:example:user1',
-      'feed:1'
-    );
+    expect(mockGetUserRoleForFeed).toHaveBeenCalledWith(mockUser.did, 'feed:1');
     expect(mockStatus).toHaveBeenCalledWith(403);
     expect(mockJson).toHaveBeenCalledWith({
       error: 'Not authorized to view logs for this feed',
@@ -100,7 +99,7 @@ describe('getLogsController', () => {
   it('should filter logs for moderators', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs?uri=feed:1',
@@ -139,7 +138,7 @@ describe('getLogsController', () => {
   it('should return all logs for admins', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs?uri=feed:1',
@@ -160,7 +159,7 @@ describe('getLogsController', () => {
   it('should pass query parameters as filters', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs?uri=feed:1&action=user_ban&performedBy=did:example:admin1&targetUser=did:example:user2&targetPost=at://post/1&sortBy=ascending&fromDate=2023-01-01&toDate=2023-01-31',
@@ -193,7 +192,7 @@ describe('getLogsController', () => {
   it('should handle errors gracefully', async () => {
     // Arrange
     const req = createMockRequest({
-      user: { did: 'did:example:user1', handle: 'user1' },
+      user: { did: mockUser.did, handle: mockUser.handle },
       protocol: 'http',
       get: jest.fn().mockReturnValue('example.com'),
       url: '/api/logs?uri=feed:1',

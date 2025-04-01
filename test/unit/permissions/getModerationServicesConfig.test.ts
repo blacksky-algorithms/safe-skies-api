@@ -4,7 +4,7 @@ import {
   mockCacheSet,
   setupNodeCacheMocks,
 } from '../../mocks/cache.mocks';
-import { sampleModerationServices } from '../../fixtures/permissions.fixtures';
+import { mockModerationServices } from '../../fixtures/moderation.fixtures';
 
 // Setup mocks before importing
 setupNodeCacheMocks();
@@ -34,11 +34,11 @@ describe('getModerationServicesConfig', () => {
 
   it('should return cached value if available', async () => {
     // Setup cache to return a value
-    mockCacheGet.mockReturnValue(sampleModerationServices);
+    mockCacheGet.mockReturnValue(mockModerationServices);
 
     const result = await getModerationServicesConfig();
 
-    expect(result).toEqual(sampleModerationServices);
+    expect(result).toEqual(mockModerationServices);
     // No queries should have been tracked when cache hit
     expect(queryCount).toBe(0);
   });
@@ -51,16 +51,16 @@ describe('getModerationServicesConfig', () => {
     tracker.on('query', function (query) {
       queryCount++;
       expect(query.method).toBe('select');
-      query.response(sampleModerationServices);
+      query.response(mockModerationServices);
     });
 
     const result = await getModerationServicesConfig();
 
-    expect(result).toEqual(sampleModerationServices);
+    expect(result).toEqual(mockModerationServices);
     expect(queryCount).toBe(1);
     expect(mockCacheSet).toHaveBeenCalledWith(
       'moderationServices',
-      sampleModerationServices
+      mockModerationServices
     );
   });
 

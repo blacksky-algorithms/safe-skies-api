@@ -7,6 +7,7 @@ setupLogsMocks();
 
 // Import after setting up mocks
 import { updateFeedNameIfChanged } from '../../../src/repos/feed';
+import { mockUser } from '../../fixtures/user.fixtures';
 
 describe('updateFeedNameIfChanged', () => {
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe('updateFeedNameIfChanged', () => {
   });
 
   it('should update feed name when it has changed', async () => {
-    const did = 'did:example:123';
+    const did = mockUser.did;
     const uri = 'feed:1';
     const localName = 'Old Feed Name';
     const newName = 'New Feed Name';
@@ -55,7 +56,7 @@ describe('updateFeedNameIfChanged', () => {
   });
 
   it('should not update or log when feed name has not changed', async () => {
-    const did = 'did:example:123';
+    const did = mockUser.did;
     const uri = 'feed:1';
     const localName = 'Same Feed Name';
     const newName = 'Same Feed Name';

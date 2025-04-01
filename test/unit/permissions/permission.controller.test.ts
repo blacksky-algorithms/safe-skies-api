@@ -14,7 +14,9 @@ import {
 // Import our consolidated permissions mocks
 import * as permissions from '../../../src/repos/permissions';
 import { setupPermissionsMocks } from '../../mocks/permissions.mocks';
-import { moderators } from '../../mocks/moderation.mocks';
+
+import { mockUser } from '../../fixtures/user.fixtures';
+import { mockModeratorsList } from '../../fixtures/moderation.fixtures';
 
 describe('Permissions Controller', () => {
   let req: Request;
@@ -53,7 +55,7 @@ describe('Permissions Controller', () => {
   describe('promoteModerator', () => {
     beforeEach(() => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         body: {
           targetUserDid: 'did:example:target',
           uri: 'feed:1',
@@ -71,7 +73,7 @@ describe('Permissions Controller', () => {
 
       // Verify the right functions were called with correct params
       expect(permissions.canPerformAction).toHaveBeenCalledWith(
-        'did:example:acting',
+        mockUser.did,
         'mod_promote',
         'feed:1'
       );
@@ -79,7 +81,7 @@ describe('Permissions Controller', () => {
         'did:example:target',
         'feed:1',
         'mod',
-        'did:example:acting',
+        mockUser.did,
         'Test Feed'
       );
       expect(res.json).toHaveBeenCalledWith({ success: true });
@@ -99,7 +101,7 @@ describe('Permissions Controller', () => {
   describe('demoteModerator', () => {
     beforeEach(() => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         body: {
           modDid: 'did:example:mod',
           uri: 'feed:1',
@@ -115,7 +117,7 @@ describe('Permissions Controller', () => {
       await demoteModerator(req, res);
 
       expect(permissions.canPerformAction).toHaveBeenCalledWith(
-        'did:example:acting',
+        mockUser.did,
         'mod_demote',
         'feed:1'
       );
@@ -123,7 +125,7 @@ describe('Permissions Controller', () => {
         'did:example:mod',
         'feed:1',
         'user',
-        'did:example:acting',
+        mockUser.did,
         'Test Feed'
       );
       expect(res.json).toHaveBeenCalledWith({ success: true });
@@ -134,47 +136,49 @@ describe('Permissions Controller', () => {
   describe('listModerators', () => {
     it('should list moderators for specific feed when user is admin', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: { feed: 'feed:1' },
       });
 
       jest.spyOn(permissions, 'getFeedRole').mockResolvedValue('admin');
       jest
         .spyOn(permissions, 'fetchFeedModsWithProfiles')
-        .mockResolvedValue([{ moderators, feed: { uri: 'feed:1' } }]);
+        .mockResolvedValue([
+          { moderators: mockModeratorsList, feed: { uri: 'feed:1' } },
+        ]);
 
       await listModerators(req, res);
 
       expect(permissions.getFeedRole).toHaveBeenCalledWith(
-        'did:example:acting',
+        mockUser.did,
         'feed:1'
       );
       expect(permissions.fetchFeedModsWithProfiles).toHaveBeenCalledWith([
         { uri: 'feed:1' },
       ]);
-      expect(res.json).toHaveBeenCalledWith({ moderators });
+      expect(res.json).toHaveBeenCalledWith({ moderators: mockModeratorsList });
     });
 
     it('should list moderators across all admin feeds when no feed specified', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
       });
 
       jest
         .spyOn(permissions, 'fetchModsForAdminFeeds')
-        .mockResolvedValue(moderators);
+        .mockResolvedValue(mockModeratorsList);
 
       await listModerators(req, res);
 
       expect(permissions.fetchModsForAdminFeeds).toHaveBeenCalledWith(
-        'did:example:acting'
+        mockUser.did
       );
-      expect(res.json).toHaveBeenCalledWith({ moderators });
+      expect(res.json).toHaveBeenCalledWith({ moderators: mockModeratorsList });
     });
 
     it('should prevent non-admins from viewing feed moderators', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: { feed: 'feed:1' },
       });
 
@@ -191,7 +195,7 @@ describe('Permissions Controller', () => {
   describe('checkFeedRole', () => {
     it('should return target user role when actor is admin', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: { targetDid: 'did:example:target', uri: 'feed:1' },
       });
 
@@ -206,7 +210,7 @@ describe('Permissions Controller', () => {
       expect(permissions.getFeedRole).toHaveBeenCalledTimes(2);
       expect(permissions.getFeedRole).toHaveBeenNthCalledWith(
         1,
-        'did:example:acting',
+        mockUser.did,
         'feed:1'
       );
       expect(permissions.getFeedRole).toHaveBeenNthCalledWith(
@@ -219,7 +223,7 @@ describe('Permissions Controller', () => {
 
     it('should prevent non-admins from checking roles', async () => {
       req = createMockRequest({
-        user: { did: 'did:example:acting', handle: '@acting' },
+        user: { did: mockUser.did, handle: mockUser.handle },
         query: { targetDid: 'did:example:target', uri: 'feed:1' },
       });
 

@@ -1,7 +1,6 @@
 import { DEFAULT_FEED } from '../../../src/lib/constants';
 import {
   mockGetEnrichedFeedsForUser,
-  mockFeedData,
   setupFeedMocks,
 } from '../../mocks/feed.mocks';
 
@@ -16,6 +15,8 @@ import {
   mockJson,
   mockStatus,
 } from '../../mocks/express.mock';
+import { mockUser } from '../../fixtures/user.fixtures';
+import { mockEnrichedFeedData } from '../../fixtures/feed.fixtures';
 
 describe('getUserFeeds controller', () => {
   beforeEach(() => {
@@ -46,25 +47,25 @@ describe('getUserFeeds controller', () => {
 
   it('should return enriched feeds when userDid is provided', async () => {
     // Create request with userDid
-    const req = createMockRequest({ query: { userDid: 'did:example:123' } });
+    const req = createMockRequest({ query: { userDid: mockUser.did } });
     const res = createMockResponse();
 
     // Mock the return value for this test
-    mockGetEnrichedFeedsForUser.mockResolvedValueOnce(mockFeedData);
+    mockGetEnrichedFeedsForUser.mockResolvedValueOnce(mockEnrichedFeedData);
 
     // Call the controller
     await getUserFeeds(req, res);
 
     // Verify getEnrichedFeedsForUser was called with the right parameter
-    expect(mockGetEnrichedFeedsForUser).toHaveBeenCalledWith('did:example:123');
+    expect(mockGetEnrichedFeedsForUser).toHaveBeenCalledWith(mockUser.did);
 
     // Verify response
-    expect(mockJson).toHaveBeenCalledWith(mockFeedData);
+    expect(mockJson).toHaveBeenCalledWith(mockEnrichedFeedData);
   });
 
   it('should handle errors and return 500 status', async () => {
     // Create request with userDid
-    const req = createMockRequest({ query: { userDid: 'did:example:123' } });
+    const req = createMockRequest({ query: { userDid: mockUser.did } });
     const res = createMockResponse();
 
     // Mock an error

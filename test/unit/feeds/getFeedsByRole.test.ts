@@ -4,6 +4,7 @@ setupDbMocks();
 
 // Import after setting up mocks
 import { getFeedsByRole } from '../../../src/repos/feed';
+import { mockUser } from '../../fixtures/user.fixtures';
 
 describe('getFeedsByRole', () => {
   // Track query count
@@ -31,14 +32,14 @@ describe('getFeedsByRole', () => {
   });
 
   it('should return an empty array if role is "user"', async () => {
-    const result = await getFeedsByRole('did:example:123', 'user');
+    const result = await getFeedsByRole(mockUser.did, 'user');
     expect(result).toEqual([]);
     expect(queryCount).toBe(0); // No queries should be executed
   });
 
   it('should return feed permissions for a valid did and role', async () => {
     const expectedRows = [
-      { uri: 'feed1', feed_name: 'Feed One', admin_did: 'did:example:123' },
+      { uri: 'feed1', feed_name: 'Feed One', admin_did: mockUser.did },
     ];
 
     // Setup tracker to intercept queries
@@ -51,14 +52,14 @@ describe('getFeedsByRole', () => {
 
       // Check bindings for the where clause
       const bindingsStr = JSON.stringify(query.bindings);
-      expect(bindingsStr).toContain('did:example:123');
+      expect(bindingsStr).toContain(mockUser.did);
       expect(bindingsStr).toContain('admin');
 
       // Return the expected result
       query.response(expectedRows);
     });
 
-    const result = await getFeedsByRole('did:example:123', 'admin');
+    const result = await getFeedsByRole(mockUser.did, 'admin');
 
     expect(queryCount).toBe(1); // One query should be executed
     expect(result).toEqual(expectedRows);
@@ -73,7 +74,7 @@ describe('getFeedsByRole', () => {
 
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    const result = await getFeedsByRole('did:example:123', 'admin');
+    const result = await getFeedsByRole(mockUser.did, 'admin');
 
     expect(queryCount).toBe(1); // One query should be executed
     expect(result).toEqual([]);

@@ -1,40 +1,15 @@
-// test/mocks/feed.mocks.ts
 import { DEFAULT_FEED } from '../../src/lib/constants';
+import {
+  mockAdminFeedByRole,
+  mockEnrichedFeedData,
+} from '../fixtures/feed.fixtures';
 import { mockActorFeeds, mockGetFeedGenerator } from './atproto.mocks';
-
-// Mock data for getEnrichedFeedsForUser
-export const mockFeedData = {
-  feeds: [
-    {
-      uri: 'feed:1',
-      displayName: 'BlueSky Admin Feed 1',
-      description: 'Admin description 1',
-      did: 'did:feed:1',
-      type: 'admin',
-    },
-    {
-      uri: 'feed:2',
-      displayName: 'Admin Feed 2',
-      description: 'Admin description 2',
-      did: 'did:feed:2',
-      type: 'admin',
-    },
-    {
-      uri: 'feed:3',
-      displayName: 'Test Feed',
-      description: 'Test Description',
-      did: 'did:feed:1',
-      type: 'mod',
-    },
-  ],
-  defaultFeed: DEFAULT_FEED,
-};
 
 // Mock implementation of getEnrichedFeedsForUser that matches test expectations
 export const mockGetEnrichedFeedsForUser = jest
   .fn()
   .mockImplementation(async () => {
-    return mockFeedData;
+    return mockEnrichedFeedData;
   });
 
 // Mock implementation of updateFeedNameIfChanged
@@ -56,9 +31,7 @@ export const mockGetFeedsByRole = jest
     if (role === 'user') return [];
 
     if (role === 'admin') {
-      return [
-        { uri: 'feed1', feed_name: 'Feed One', admin_did: 'did:example:123' },
-      ];
+      return [mockAdminFeedByRole];
     }
 
     if (role === 'mod') {
@@ -129,7 +102,7 @@ export const realGetEnrichedFeedsForUser = jest
       };
     }
 
-    return mockFeedData;
+    return mockEnrichedFeedData;
   });
 
 // Setup function - mocks the entire feed module

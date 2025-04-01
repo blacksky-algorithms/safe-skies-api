@@ -2,7 +2,6 @@ import { mockBlueskyOAuthClient, setupAuthMocks } from '../../mocks/auth.mocks';
 
 setupAuthMocks();
 
-// Import controllers after setting up mocks
 import {
   signin,
   logout,
@@ -12,6 +11,11 @@ import {
   createMockRequest,
   createMockResponse,
 } from '../../mocks/express.mock';
+import { mockUser } from '../../fixtures/user.fixtures';
+import {
+  mockOauthResponseParams,
+  mockToken,
+} from '../../fixtures/auth.fixtures';
 
 describe('Auth Controller', () => {
   beforeEach(() => {
@@ -34,7 +38,7 @@ describe('Auth Controller', () => {
     });
 
     it('should call BlueskyOAuthClient.authorize and return the URL if handle is provided', async () => {
-      const req = createMockRequest({ query: { handle: 'testHandle' } });
+      const req = createMockRequest({ query: { handle: mockUser.handle } });
       const res = createMockResponse();
       const fakeUrl = new URL('http://example.com');
 
@@ -43,7 +47,7 @@ describe('Auth Controller', () => {
       await signin(req, res);
 
       expect(mockBlueskyOAuthClient.authorize).toHaveBeenCalledWith(
-        'testHandle'
+        mockUser.handle
       );
       expect(res.json).toHaveBeenCalledWith({ url: fakeUrl.toString() });
     });
@@ -76,10 +80,10 @@ describe('Auth Controller', () => {
     });
 
     it('should process a valid callback and redirect with a token', async () => {
-      const req = createMockRequest({ query: { code: 'abc', state: '123' } });
+      const req = createMockRequest({ query: mockOauthResponseParams });
       const res = createMockResponse();
 
-      const fakeSession = { session: { sub: 'did:example:123' } };
+      const fakeSession = { session: { sub: mockUser.did } };
       mockBlueskyOAuthClient.callback.mockResolvedValueOnce(fakeSession);
 
       await callback(req, res);
@@ -87,11 +91,11 @@ describe('Auth Controller', () => {
       expect(res.redirect).toHaveBeenCalled();
       const redirectUrl = (res.redirect as jest.Mock).mock.calls[0][0];
       expect(redirectUrl).toContain(process.env.CLIENT_URL);
-      expect(redirectUrl).toContain('token=fake.jwt.token');
+      expect(redirectUrl).toContain(`token=${mockToken}`);
     });
 
     it('should redirect to login with error on failure', async () => {
-      const req = createMockRequest({ query: { code: 'abc', state: '123' } });
+      const req = createMockRequest({ query: mockOauthResponseParams });
       const res = createMockResponse();
 
       const consoleSpy = jest

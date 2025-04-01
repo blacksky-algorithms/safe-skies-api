@@ -153,7 +153,6 @@ export async function getEnrichedFeedsForUser(userDid: string): Promise<{
     uri: string;
     displayName?: string;
     description?: string;
-    did?: string;
     type: UserRole;
   }[];
   defaultFeed: typeof DEFAULT_FEED;
