@@ -1,6 +1,6 @@
 // Stub external modules for integration tests.
 
-jest.mock('../../src/repos/atproto', () => ({
+jest.mock('../src/repos/atproto', () => ({
   AtprotoAgent: {
     // Return a fixed profile based on the actor.
     getProfile: jest.fn(async (params: { actor: string }) => {
