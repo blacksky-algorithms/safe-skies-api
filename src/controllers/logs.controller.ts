@@ -76,7 +76,7 @@ export const getLogsController = async (
       ];
       logs = logs.filter((log) => allowedActions.includes(log.action));
       // Create a new type that omits performed_by
-
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const filteredLogs = logs.map(({ performed_by_profile, ...rest }) => {
         return rest;
       });

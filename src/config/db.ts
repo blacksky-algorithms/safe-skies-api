@@ -15,7 +15,10 @@ export const db = knex({
   pool: {
     min: 2,
     max: 10,
-    afterCreate: (conn: any, done: Function) => {
+    afterCreate: (
+      conn: { on: (arg0: string, arg1: (err: Error) => never) => void },
+      done: () => void
+    ) => {
       conn.on('error', (err: Error) => {
         console.error('Unexpected database error:', err);
         process.exit(-1);

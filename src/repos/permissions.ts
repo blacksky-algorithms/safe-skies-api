@@ -11,6 +11,7 @@ import {
 import { Feed } from '@atproto/api/dist/client/types/app/bsky/feed/describeFeedGenerator';
 import { getModerationServicesConfig } from './moderation';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
+import { createModerationLog } from './logs';
 
 /**
  * Helper: Fetch the actor's feeds from the 'feed_permissions' table using Knex.
@@ -61,37 +62,6 @@ export async function canPerformAction(
   return canPerformWithRole(role, action);
 }
 
-/**
- * Creates a moderation log entry.
- */
-export async function createModerationLog(log: {
-  uri: string;
-  performed_by: string;
-  action: ModAction;
-  target_user_did: string;
-  target_post_uri?: string;
-  reason?: string;
-  to_services?: string[];
-  metadata: any;
-}): Promise<void> {
-  try {
-    const result = await db('logs').insert({
-      id: db.raw('gen_random_uuid()'),
-      uri: log.uri,
-      performed_by: log.performed_by,
-      action: log.action,
-      target_user_did: log.target_user_did,
-      target_post_uri: log.target_post_uri,
-      reason: log.reason,
-      to_services: log.to_services,
-      metadata: JSON.stringify(log.metadata),
-      created_at: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error('Error creating moderation log:', error);
-    throw error;
-  }
-}
 /**
  * Retrieves the current role for a user on a given feed.
  * Since roles are defined per feed, we query the feed_permissions table.
@@ -341,9 +311,10 @@ export async function customServiceGate(
   try {
     const services = await getModerationServicesConfig();
     const service = services.find((s) => s.value === serviceValue);
+
     if (!service || !service.admin_did) {
       // If there’s no specific admin_did configured, default to allowing the service.
-      return true;
+      return false;
     }
     // Check if the feed URI includes the service's admin_did.
     return feedUri.includes(service.admin_did);
@@ -422,11 +393,13 @@ export async function buildFeedPermissions(
       perm.admin_did,
       servicesConfig
     );
+    // If an existing permission is 'admin', but the user didn't create the feed, override it to 'user'
+    const role: UserRole = perm.role === 'admin' ? 'user' : perm.role;
     permissionsMap.set(perm.uri, {
       did: userDid,
       uri: perm.uri,
       feed_name: perm.feed_name,
-      role: perm.role,
+      role,
       allowed_services,
       admin_did: perm.admin_did,
     });

@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { BlueskyOAuthClient } from '../repos/oauth-client';
-import { AtprotoAgent } from '../repos/atproto';
-import { getActorFeeds } from '../repos/atproto';
+import { AtprotoAgent, getActorFeeds } from '../repos/atproto';
 import { getProfile, saveProfile } from '../repos/profile';
 import { UserRole } from '../lib/types/permission';
 import { SessionPayload } from '../lib/types/session';

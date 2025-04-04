@@ -25,6 +25,7 @@ export async function getModerationServicesConfig(): Promise<
     ).select('*');
     // Cache the result.
     configCache.set('moderationServices', services);
+
     return services;
   } catch (error) {
     console.error('Error fetching moderation services config:', error);
@@ -54,7 +55,7 @@ export async function reportToBlacksky(uris: { uri: string }[]) {
         body: JSON.stringify(uris),
       }
     );
-    console.log({ response });
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
