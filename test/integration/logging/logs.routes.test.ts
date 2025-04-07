@@ -131,20 +131,5 @@ describe('Logs Routes Integration', () => {
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
     });
-
-    it.skip('should handle errors gracefully', async () => {
-      (jwt.verify as jest.Mock).mockReturnValue(mockActingAdminUser);
-      // Setup mock to throw an error
-
-      // Make the request
-      const response = await request(app)
-        .get('/api/logs')
-        .query({ uri: 'feed:1' })
-        .set('Authorization', 'Bearer valid-token');
-
-      // Should return server error
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error');
-    });
   });
 });
