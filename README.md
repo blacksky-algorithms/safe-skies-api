@@ -80,8 +80,8 @@ We encourage testing and feedback but recommend caution when using SAFEskies API
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/FreedomWriter/SAFEskies.git
-   cd SAFEskies
+   git clone https://github.com/blacksky-algorithms/safe-skies-api.git
+   cd safe-skies-api
    ```
 
 2. **Install Dependencies:**
@@ -317,13 +317,19 @@ SAFEskies API uses Jest for unit testing with a structured mocking pattern to en
 The testing approach focuses on:
 
 - **Unit tests** for individual functions and modules
+- **Integration tests** for API endpoints using Supertest
 - **Isolated testing** using comprehensive mocks
 - **Centralized mock definitions** for consistency and reusability
 - **Clear setup patterns** that follow a consistent structure
 
 ### Test Structure
 
-Tests are organized in the `test` directory with fixtures containing sample data, centralized mock definitions for various modules (database, API, auth, etc.), and unit tests organized by module. This structure ensures tests are maintainable and consistent across the codebase.
+Tests are organized in the `test` directory with:
+
+- `fixtures`: Sample data for consistent test scenarios
+- `mocks`: Centralized mock definitions for various modules (database, JWT, API clients, etc.)
+- `unit`: Tests for individual functions and components
+- `integration`: End-to-end tests that verify endpoint behavior
 
 ### Mocking Pattern
 
@@ -332,63 +338,82 @@ The project follows a consistent mocking pattern:
 1. **Centralized mock definitions**:
 
    ```typescript
-   // Example from db.mocks.ts
-   export const mockDbSelect = jest.fn().mockReturnThis();
-   export const mockDbWhere = jest.fn();
-   export const mockDb = jest.fn().mockReturnValue({
-     select: mockDbSelect,
-     where: mockDbWhere,
-   });
+   // Example from logs.mocks.ts
+   export const mockGetLogs = jest
+     .fn<Promise<LogEntry[]>, [LogFilters]>()
+     .mockResolvedValue(mockLogEntries);
 
-   // Helper function to set up successful query
-   export const setupSuccessfulQuery = (returnValue: unknown[]): void => {
-     mockDbWhere.mockResolvedValue(returnValue);
-   };
-
-   // Helper function to set up failed query
-   export const setupFailedQuery = (error: Error): void => {
-     mockDbWhere.mockRejectedValue(error);
-   };
+   export const mockCreateModerationLog = jest
+     .fn()
+     .mockResolvedValue(undefined);
 
    // Setup function
-   export const setupDbMocks = (): void => {
-     jest.mock('../../src/config/db', () => ({
-       db: mockDb,
+   export const setupLogsMocks = (): void => {
+     jest.mock('../../src/repos/logs', () => ({
+       getLogs: mockGetLogs,
+       createModerationLog: mockCreateModerationLog,
      }));
    };
    ```
 
-2. **Consistent test file structure**:
+2. **Authentication mocking**:
 
    ```typescript
+   // Example from auth.mocks.ts
+   export const mockJwtSign = jest.fn().mockReturnValue(mockToken);
+   export const mockJwtVerify = jest.fn().mockImplementation(() => adminUser);
+
+   export const setupAuthMocks = (): void => {
+     jest.mock('jsonwebtoken', () => ({
+       sign: mockJwtSign,
+       verify: mockJwtVerify,
+     }));
+     // Other auth-related mocks...
+   };
+   ```
+
+3. **Express request/response mocking**:
+
+   ```typescript
+   // Example usage in controller tests
    import {
-     mockDb,
-     setupSuccessfulQuery,
-     setupDbMocks,
-   } from '../../mocks/db.mocks';
+     createMockRequest,
+     createMockResponse,
+   } from '../mocks/express.mock';
 
-   // Setup mocks before importing the module under test
-   setupDbMocks();
-
-   // Import after setting up mocks
-   import { myFunction } from '../../../src/repos/myModule';
-
-   describe('myFunction', () => {
-     beforeEach(() => {
-       jest.clearAllMocks();
+   it('should handle the request', async () => {
+     const req = createMockRequest({
+       user: { did: mockAdmin.did },
+       query: { limit: '10' },
      });
+     const res = createMockResponse();
 
-     afterAll(() => {
-       jest.restoreAllMocks();
-     });
+     await myController(req, res);
 
-     it('should return expected data', async () => {
-       setupSuccessfulQuery([{ data: 'test' }]);
+     expect(res.status).toHaveBeenCalledWith(200);
+   });
+   ```
 
-       const result = await myFunction();
+4. **Integration testing pattern**:
 
-       expect(mockDb).toHaveBeenCalledWith('table_name');
-       expect(result).toEqual([{ data: 'test' }]);
+   ```typescript
+   // Example integration test
+   import request from 'supertest';
+   import app from '../../../src/app';
+   import { setupAuthMocks, mockJwtVerify } from '../../mocks/auth.mocks';
+   import { setupLogsMocks } from '../../mocks/logs.mocks';
+
+   // Setup mocks before testing
+   setupAuthMocks();
+   setupLogsMocks();
+
+   describe('API Endpoint', () => {
+     it('should return expected response', async () => {
+       const response = await request(app)
+         .get('/api/route')
+         .set('Authorization', 'Bearer token');
+
+       expect(response.status).toBe(200);
      });
    });
    ```
@@ -418,7 +443,7 @@ npm run test:coverage
 - **Morgan**: HTTP request logging.
 - **TypeScript**: Static typing.
 - **Jest & Supertest**: Testing.
-- **Newman**: Command-line collection runner for Postman.
+<!-- - **Newman**: Command-line collection runner for Postman. -->
 - **ESLint & Prettier**: Code quality.
 - **Husky**: Git hooks for code quality.
 - **Zod**: TypeScript-first schema validation.
