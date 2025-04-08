@@ -1,4 +1,3 @@
-import { ProfileViewBasic } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 import { ModAction } from './moderation';
 
 export interface LogEntry {
@@ -8,7 +7,7 @@ export interface LogEntry {
   action: string;
   target_post_uri?: string;
   target_user_did?: string;
-  metadata?: any;
+  metadata?: unknown;
   created_at: string;
   ip_address?: string;
   user_agent?: string;

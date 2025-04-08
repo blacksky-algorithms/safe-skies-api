@@ -44,7 +44,7 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
 
   const rows = await query;
 
-  const logs: LogEntry[] = rows.map((row: any) => ({
+  const logs: LogEntry[] = rows.map((row) => ({
     id: row.id,
     uri: row.uri,
     performed_by: row.performed_by,
@@ -76,4 +76,60 @@ export async function getLogs(filters: LogFilters): Promise<LogEntry[]> {
   }));
 
   return logs;
+}
+
+/**
+ * Creates a moderation log entry.
+ */
+export async function createModerationLog(log: {
+  uri: string;
+  performed_by: string;
+  action: ModAction;
+  target_user_did: string;
+  target_post_uri?: string;
+  reason?: string;
+  to_services?: string[];
+  metadata: unknown;
+}): Promise<void> {
+  try {
+    await db('logs').insert({
+      id: db.raw('gen_random_uuid()'),
+      uri: log.uri,
+      performed_by: log.performed_by,
+      action: log.action,
+      target_user_did: log.target_user_did,
+      target_post_uri: log.target_post_uri,
+      reason: log.reason,
+      to_services: log.to_services,
+      metadata: JSON.stringify(log.metadata),
+      created_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error creating moderation log:', error);
+    throw error;
+  }
+}
+
+/**
+ * Creates a feed generator log entry.
+ */
+export async function createFeedGenLog(log: {
+  uri: string;
+  previous: string;
+  current: string;
+  metadata?: unknown;
+}): Promise<void> {
+  try {
+    await db('feed_gen_logs').insert({
+      id: db.raw('gen_random_uuid()'),
+      uri: log.uri,
+      previous: log.previous,
+      current: log.current,
+      metadata: log.metadata ? JSON.stringify(log.metadata) : null,
+      created_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error creating feed generator log:', error);
+    throw error;
+  }
 }
