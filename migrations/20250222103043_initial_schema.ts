@@ -207,6 +207,9 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamp('created_at').defaultTo(knex.fn.now());
     table.text('created_by');
     table.foreign('did').references('profiles.did').onDelete('CASCADE');
+    table
+      .specificType('allowed_services', 'text[]')
+      .defaultTo(knex.raw(`ARRAY['ozone']::text[]`));
   });
 
   await knex.schema.createTable('logs', (table) => {

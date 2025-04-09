@@ -1,16 +1,13 @@
-import { Knex } from 'knex';
+/**
+ * This migration has been refactored.
+ * The allowed_services column is now created in the initial schema.
+ * This stub exists to satisfy migration history for existing installations.
+ */
 
-export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('feed_permissions', (table) => {
-    table
-      .specificType('allowed_services', 'text[]')
-      .defaultTo(knex.raw(`ARRAY['ozone']::text[]`))
-      .alter();
-  });
+export async function up(): Promise<void> {
+  // No operation needed.
 }
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('feed_permissions', (table) => {
-    table.dropColumn('allowed_services');
-  });
+export async function down(): Promise<void> {
+  // No rollback necessary.
 }
