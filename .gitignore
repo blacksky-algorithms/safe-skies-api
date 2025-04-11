@@ -42,6 +42,9 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
- 
+
 # Notes
 temp/*
+
+# build folder
+dist/
