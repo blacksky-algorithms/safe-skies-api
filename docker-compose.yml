@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      target: dev
+    environment:
+      NODE_ENV: development
+      BASE_URL: https://safeskies.app
+      CLIENT_URL: http://localhost:3000
+      BSKY_BASE_API_URL: https://api.bsky.app
+      RSKY_FEEDGEN: at://did:plc:w4xbfzo7kqfes5zb7r6qv3rw/app.bsky.feed.generator/blacksky
+      JWT_SECRET: 1VqTKEyiOAiC7KEVn7xZdw9/r16ETIWx
+      ENCRYPTION_KEY: cVnXJX3G4+MF9pLALpS0CMGk/4q5o0mdeuhbCFC3uzg=
+      PGUSER: postgres
+      PGPASSWORD: password
+      PGHOST: 127.0.0.1
+      PGDATABASE: safeskiesdb
+      PGPORT: 5432
+    ports:
+      - 5000:5000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/usr/src/app/src
+
+  db:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=safeskiesdb
+      - POSTGRES_PASSWORD=password
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:

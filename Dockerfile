@@ -1,42 +1,32 @@
-# ============================
-# Builder Stage
-# ============================
-FROM node:20-alpine AS builder
+# Node LTS
+ARG NODE_VERSION=22.14.0
 
-# Set working directory inside container
-WORKDIR /app
+FROM node:${NODE_VERSION}-alpine AS base
+WORKDIR /usr/src/app
+EXPOSE 4000
 
-# Copy package files and install all dependencies (including dev)
-COPY package*.json ./
-RUN npm ci
+FROM base AS dev
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci --include=dev
 
-# Copy entire source (including src folder)
+USER node
 COPY . .
+RUN npm run dev
 
-# Build the application (TypeScript compilation)
+FROM base AS prodbuilder
+ENV HUSKY=0
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
+
+USER node
+COPY . .
 RUN npm run build
 
-# ============================
-# Runner Stage (Production Image)
-# ============================
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-# Set production environment
-ENV NODE_ENV=production
-
-# Copy package files again
-COPY package*.json ./
-
-# Install only production dependencies, ignoring scripts (like husky install)
-RUN npm ci --omit=dev --ignore-scripts
-
-# Copy built output from the builder stage
-COPY --from=builder /app/dist ./dist
-
-# Expose the port your Node API listens on (8080)
-EXPOSE 8080
-
-# Start the application
-CMD ["npm", "start"]
+FROM prodbuilder AS prodrunner
+USER node
+COPY --from=prodBuilder /usr/src/app/dist ./dist
+RUN node dist/src/server.js
