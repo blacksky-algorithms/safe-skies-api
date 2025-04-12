@@ -1,23 +1,23 @@
-version: "3.9"
-
 services:
   api:
     build:
       context: .
+      args:
+        BASE_URL: ${BASE_URL}
+        PORT: ${PORT}
+        PGUSER: ${PGUSER}
+        PGPASSWORD: ${PGPASSWORD}
+        PGHOST: ${PGHOST}
+        PGDATABASE: ${PGDATABASE}
+        PGPORT: ${PGPORT}
+        NODE_ENV: ${NODE_ENV}
+        ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+        BSKY_BASE_API_URL: ${BSKY_BASE_API_URL}
+        CLIENT_URL: ${CLIENT_URL}
+        JWT_SECRET: ${JWT_SECRET}
+        RSKY_FEEDGEN: ${RSKY_FEEDGEN}
+        RSKY_API_KEY: ${RSKY_API_KEY}
       target: dev
-    environment:
-      NODE_ENV: development
-      BASE_URL: https://safeskies.app
-      CLIENT_URL: http://localhost:3000
-      BSKY_BASE_API_URL: https://api.bsky.app
-      RSKY_FEEDGEN: at://did:plc:w4xbfzo7kqfes5zb7r6qv3rw/app.bsky.feed.generator/blacksky
-      JWT_SECRET: REPLACE_ME
-      ENCRYPTION_KEY: RELPACE_ME
-      PGUSER: postgres
-      PGPASSWORD: password
-      PGHOST: 127.0.0.1
-      PGDATABASE: safeskiesdb
-      PGPORT: 5432
     ports:
       - 5000:5000
     depends_on:
