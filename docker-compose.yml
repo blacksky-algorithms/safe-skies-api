@@ -20,7 +20,7 @@ services:
       - db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=safeskiesdb
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=${PGPASSWORD}
     expose:
       - 5432
     healthcheck:
