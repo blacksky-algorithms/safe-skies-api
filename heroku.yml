@@ -1,0 +1,26 @@
+setup:
+  addons:
+    - plan: heroku-postgresql
+      as: DATABASE
+build:
+  docker:
+    release:
+      dockerfile: Dockerfile
+      target: prodrunner
+  config:
+    PORT: $PORT
+    NODE_ENV: $NODE_ENV
+    PGUSER: $PGUSER
+    PGPASSWORD: $PGPASSWORD
+    PGHOST: $PGHOST
+    PGDATABASE: $PGDATABASE
+    PGPORT: $PGPORT
+    ENCRYPTION_KEY: $ENCRYPTION_KEY
+    BSKY_BASE_API_URL: $BSKY_BASE_API_URL
+    CLIENT_URL: $CLIENT_URL
+    BASE_URL: $BASE_URL
+    JWT_SECRET: $JWT_SECRET
+    RSKY_FEEDGEN: $RSKY_FEEDGEN
+    RSKY_API_KEY: $RSKY_API_KEYS
+release:
+  image: worker
