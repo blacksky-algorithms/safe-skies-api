@@ -22,7 +22,7 @@ SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environme
       - [Managing Backups](#managing-backups)
       - [Restoration Process](#restoration-process)
   - [Running the Server](#running-the-server)
-    - [Local Development](#local-development)
+    - [Local Development Auth/Client](#local-development-authclient)
     - [Available Scripts](#available-scripts)
   - [API Endpoints](#api-endpoints)
     - [Authentication](#authentication)
@@ -225,9 +225,9 @@ npm run build
 
 When running in development mode with `npm run dev`, ts-node-dev will automatically restart the server when changes are made. The server will run on the port specified in your `.env` file (default is 5000).
 
-### Local Development
+### Local Development Auth/Client
 
-For development locally, you'll need to expose your local server to the public internet:
+For development locally when working on auth features or the [client](https://github.com/blacksky-algorithms/SAFEskies/blob/main/.env.sample), you'll need to expose your local server to the public internet and update your client `NEXT_PUBLIC_SAFE_SKIES_API` environment variable with the ngrok url:
 
 1. **Using ngrok**:
 
@@ -245,7 +245,7 @@ For development locally, you'll need to expose your local server to the public i
    BASE_URL=https://your-ngrok-url.ngrok.io
    ```
 
-This setup allows OAuth providers to redirect back to your local development environment, which is essential for testing the authentication flow.
+This setup allows OAuth providers to redirect back to your local development environment.
 
 ### Available Scripts
 
