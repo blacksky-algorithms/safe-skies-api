@@ -12,7 +12,7 @@ if (!baseUrl) {
 
 // Bluesky OAuth Metadata
 export const BLUE_SKY_CLIENT_META_DATA: OAuthClientMetadataInput = {
-  client_name: `test`,
+  client_name: `${baseUrl}`,
   client_id: `${baseUrl}/oauth/client-metadata.json`,
   client_uri: `${baseUrl}`,
   redirect_uris: [`${baseUrl}/auth/callback`],
