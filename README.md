@@ -54,17 +54,17 @@ We encourage testing and feedback but recommend caution when using SAFEskies API
 
 ## Features
 
-- **OAuth Authentication:**  
+- **OAuth Authentication:**
   Supports BlueSky OAuth flows with persistent session storage using custom persistent stores.
-- **Profile Management:**  
+- **Profile Management:**
   Automatically creates or updates user profiles on login.
-- **Feed Permissions:**  
+- **Feed Permissions:**
   Manages feed roles with a clear hierarchy (`admin`, `mod`, `user`).
-- **Moderation Logging & Reporting:**  
+- **Moderation Logging & Reporting:**
   Logs moderation actions (post deletion/restoration, user bans/unbans, mod promotions/demotions) in a dedicated `logs` table and provides endpoints for reporting posts.
-- **Client Metadata Endpoint:**  
+- **Client Metadata Endpoint:**
   Serves OAuth client metadata for discovery.
-- **Automated Backups:**  
+- **Automated Backups:**
   Creates automatic backups during schema migrations with easy restoration options.
 
 ## Setup
@@ -101,7 +101,7 @@ cp .env.sample .env
 Example `.env.sample`:
 
 ```bash
-PORT=5000
+PORT=4000
 PGUSER=your_PGUSER
 PGPASSWORD=your_PGPASSWORD
 PGHOST=your_PGHOST
@@ -117,16 +117,16 @@ BSKY_BASE_API_URL=https://api.bsky.app
 
 
 # Client URL to which users are redirected after authentication
-CLIENT_URL=https://your-frontend-url.com
+CLIENT_URL=http://localhost:3000
 
 # Base URL for the backend server
-BASE_URL=https://your-backend-url.com
+BASE_URL=https://safeskies.app
 
 # JWT secret key for token exchange with client
 JWT_SECRET=
 
 # RSKY Feedgen URL
-RSKY_FEEDGEN=
+RSKY_FEEDGEN=at://did:plc:w4xbfzo7kqfes5zb7r6qv3rw/app.bsky.feed.generator/blacksky
 
 # RSKY API Key
 RSKY_API_KEY=
@@ -208,7 +208,17 @@ Available PostgreSQL functions:
 
 4. Verify your data after restoration.
 
-## Running the Server
+## Running the Server (with Docker)
+
+Getting the entire backend running with docker is as simple as running the following command:
+
+```bash
+docker compose up -d
+```
+
+If you don't have Docker installed you can proceed with the steps below. If you would like to try running the server with Docker you can [install it here](https://www.docker.com/)
+
+## Running the Server (without Docker)
 
 The server can be run in different modes:
 
@@ -270,27 +280,27 @@ This setup allows OAuth providers to redirect back to your local development env
 
 ### Authentication
 
-- **GET /auth/signin**  
-  Initiates the OAuth flow.  
+- **GET /auth/signin**
+  Initiates the OAuth flow.
   Query Parameters:
 
   - `handle`: A login hint (e.g., the user handle).
 
-  Response:  
+  Response:
   Returns a JSON object with an authorization URL.
 
-- **GET /auth/callback**  
+- **GET /auth/callback**
   Handles the OAuth callback. Processes the OAuth response, upserts the user profile, sets an HTTP-only cookie, and redirects to the client URL.
 
-- **POST /auth/logout**  
+- **POST /auth/logout**
   Logs the user out by clearing the session cookie.
 
-- **GET /oauth/client-metadata.json**  
+- **GET /oauth/client-metadata.json**
   Serves the OAuth client metadata for discovery.
 
 ### Moderation / Reporting
 
-- **POST /moderation/report**  
+- **POST /moderation/report**
   Accepts a JSON payload (or an array of payloads) to report a post. The payload includes:
 
   - `targetedPostUri`
@@ -303,7 +313,7 @@ This setup allows OAuth providers to redirect back to your local development env
   - `action`
   - Optional metadata fields.
 
-  Response:  
+  Response:
   Returns a summary of the processing of each report.
 
 **TODO:** Add detailed API documentation for each endpoint.
@@ -349,7 +359,7 @@ The project follows a consistent mocking pattern:
 
    // Setup function
    export const setupLogsMocks = (): void => {
-     jest.mock('../../src/repos/logs', () => ({
+     jest.mock("../../src/repos/logs", () => ({
        getLogs: mockGetLogs,
        createModerationLog: mockCreateModerationLog,
      }));
@@ -364,7 +374,7 @@ The project follows a consistent mocking pattern:
    export const mockJwtVerify = jest.fn().mockImplementation(() => adminUser);
 
    export const setupAuthMocks = (): void => {
-     jest.mock('jsonwebtoken', () => ({
+     jest.mock("jsonwebtoken", () => ({
        sign: mockJwtSign,
        verify: mockJwtVerify,
      }));
@@ -379,12 +389,12 @@ The project follows a consistent mocking pattern:
    import {
      createMockRequest,
      createMockResponse,
-   } from '../mocks/express.mock';
+   } from "../mocks/express.mock";
 
-   it('should handle the request', async () => {
+   it("should handle the request", async () => {
      const req = createMockRequest({
        user: { did: mockAdmin.did },
-       query: { limit: '10' },
+       query: { limit: "10" },
      });
      const res = createMockResponse();
 
@@ -398,20 +408,20 @@ The project follows a consistent mocking pattern:
 
    ```typescript
    // Example integration test
-   import request from 'supertest';
-   import app from '../../../src/app';
-   import { setupAuthMocks, mockJwtVerify } from '../../mocks/auth.mocks';
-   import { setupLogsMocks } from '../../mocks/logs.mocks';
+   import request from "supertest";
+   import app from "../../../src/app";
+   import { setupAuthMocks, mockJwtVerify } from "../../mocks/auth.mocks";
+   import { setupLogsMocks } from "../../mocks/logs.mocks";
 
    // Setup mocks before testing
    setupAuthMocks();
    setupLogsMocks();
 
-   describe('API Endpoint', () => {
-     it('should return expected response', async () => {
+   describe("API Endpoint", () => {
+     it("should return expected response", async () => {
        const response = await request(app)
-         .get('/api/route')
-         .set('Authorization', 'Bearer token');
+         .get("/api/route")
+         .set("Authorization", "Bearer token");
 
        expect(response.status).toBe(200);
      });
