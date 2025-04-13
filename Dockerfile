@@ -4,21 +4,6 @@ ARG NODE_VERSION=22.14.0
 FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
 EXPOSE 4000
-ARG BASE_URL
-ARG PORT
-ARG PGUSER
-ARG PGPASSWORD
-ARG PGHOST
-ARG PGDATABASE
-ARG PGPORT
-ARG NODE_ENV
-ARG ENCRYPTION_KEY
-ARG BSKY_BASE_API_URL
-ARG CLIENT_URL
-ARG BASE_URL
-ARG JWT_SECRET
-ARG RSKY_FEEDGEN
-ARG RSKY_API_KEY
 
 FROM base AS dev
 RUN --mount=type=bind,source=package.json,target=package.json \
@@ -28,7 +13,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 USER node
 COPY . .
-RUN npm run dev
+CMD npm run dev
 
 FROM base AS prodbuilder
 ENV HUSKY=0
@@ -39,9 +24,9 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 USER node
 COPY . .
-RUN npm run build
+CMD npm run build
 
 FROM prodbuilder AS prodrunner
 USER node
 COPY --from=prodBuilder /usr/src/app/dist ./dist
-RUN node dist/src/server.js
+CMD node dist/src/server.js

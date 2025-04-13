@@ -1,25 +1,11 @@
 services:
-  api:
+  backend:
     build:
       context: .
-      args:
-        BASE_URL: ${BASE_URL}
-        PORT: ${PORT}
-        PGUSER: ${PGUSER}
-        PGPASSWORD: ${PGPASSWORD}
-        PGHOST: ${PGHOST}
-        PGDATABASE: ${PGDATABASE}
-        PGPORT: ${PGPORT}
-        NODE_ENV: ${NODE_ENV}
-        ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-        BSKY_BASE_API_URL: ${BSKY_BASE_API_URL}
-        CLIENT_URL: ${CLIENT_URL}
-        JWT_SECRET: ${JWT_SECRET}
-        RSKY_FEEDGEN: ${RSKY_FEEDGEN}
-        RSKY_API_KEY: ${RSKY_API_KEY}
       target: dev
     ports:
-      - 5000:5000
+      - 4000:4000
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
