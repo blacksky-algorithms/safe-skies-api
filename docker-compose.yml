@@ -4,7 +4,7 @@ services:
       context: .
       target: dev
     ports:
-      - 4000:4000
+      - ${PORT}:${PORT}
     env_file: .env
     depends_on:
       db:

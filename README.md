@@ -101,7 +101,7 @@ cp .env.sample .env
 Example `.env.sample`:
 
 ```bash
-PORT=4000
+PORT=5000
 PGUSER=your_PGUSER
 PGPASSWORD=your_PGPASSWORD
 PGHOST=your_PGHOST
@@ -117,10 +117,10 @@ BSKY_BASE_API_URL=https://api.bsky.app
 
 
 # Client URL to which users are redirected after authentication
-CLIENT_URL=http://localhost:3000
+CLIENT_URL=https://your-frontend-url.com
 
 # Base URL for the backend server
-BASE_URL=https://safeskies.app
+BASE_URL=https://your-backend-url.com
 
 # JWT secret key for token exchange with client
 JWT_SECRET=
