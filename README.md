@@ -22,7 +22,7 @@ SAFEskies API is the backend for SAFEskies (Software Against a Fearful Environme
       - [Managing Backups](#managing-backups)
       - [Restoration Process](#restoration-process)
   - [Running the Server](#running-the-server)
-    - [Local OAuth Development](#local-oauth-development)
+    - [Local Development](#local-development)
     - [Available Scripts](#available-scripts)
   - [API Endpoints](#api-endpoints)
     - [Authentication](#authentication)
@@ -225,9 +225,9 @@ npm run build
 
 When running in development mode with `npm run dev`, ts-node-dev will automatically restart the server when changes are made. The server will run on the port specified in your `.env` file (default is 5000).
 
-### Local OAuth Development
+### Local Development
 
-For OAuth development locally, you'll need to expose your local server to the public internet:
+For development locally, you'll need to expose your local server to the public internet:
 
 1. **Using ngrok**:
 
@@ -241,13 +241,9 @@ For OAuth development locally, you'll need to expose your local server to the pu
 
 2. **Update your environment variables**:
 
+   ```node
+   BASE_URL=https://your-ngrok-url.ngrok.io
    ```
-   NEXT_PUBLIC_URL=https://your-ngrok-url.ngrok.io
-   ```
-
-3. **Configure BlueSky OAuth**:
-   - Update your BlueSky OAuth client's callback URL to match your ngrok URL
-   - Set appropriate scopes (basic profile access is sufficient for most cases)
 
 This setup allows OAuth providers to redirect back to your local development environment, which is essential for testing the authentication flow.
 
