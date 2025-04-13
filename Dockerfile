@@ -5,21 +5,6 @@ FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
 EXPOSE 4000
 
-ARG PORT
-ARG NODE_ENV
-ARG PGUSER
-ARG PGPASSWORD
-ARG PGHOST
-ARG PGDATABASE
-ARG PGPORT
-ARG ENCRYPTION_KEY
-ARG BSKY_BASE_API_URL
-ARG CLIENT_URL
-ARG BASE_URL
-ARG JWT_SECRET
-ARG RSKY_FEEDGEN
-ARG RSKY_API_KEY
-
 FROM base AS dev
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
