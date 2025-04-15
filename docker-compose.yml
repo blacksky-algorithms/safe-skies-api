@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+      target: dev
+    ports:
+      - ${PORT}:${PORT}
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/usr/src/app/src
+
+  db:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=safeskiesdb
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:
