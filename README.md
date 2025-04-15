@@ -210,7 +210,18 @@ Available PostgreSQL functions:
 
 ## Running the Server (with Docker)
 
-Getting the entire backend running with docker is as simple as running the following command:
+Getting the entire backend running with docker takes a few steps:
+
+1. If you don't have Docker installed or would like to proceed without it you can skip this part and continue following the steps below. If you would like to try running the backend with Docker you can [install it here](https://www.docker.com/)
+
+2. Update your `.env` file
+
+```diff
+- PGHOST=127.0.0.1
++ PGHOST=db
+```
+
+3. Start the backend
 
 ```bash
 docker compose up -d
