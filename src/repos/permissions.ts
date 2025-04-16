@@ -12,6 +12,7 @@ import { Feed } from '@atproto/api/dist/client/types/app/bsky/feed/describeFeedG
 import { getModerationServicesConfig } from './moderation';
 import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs';
 import { createModerationLog } from './logs';
+import { AtprotoAgent } from './atproto';
 
 /**
  * Helper: Fetch the actor's feeds from the 'feed_permissions' table using Knex.
@@ -97,20 +98,24 @@ export async function setFeedRole(
 ): Promise<boolean> {
   try {
     // 1. Check if the target user's profile exists.
-    const existingProfile = await db('profiles')
-      .select('*')
-      .where({ did: targetUserDid })
-      .first();
+    const atProtoUserData = await AtprotoAgent.getProfile({
+      actor: targetUserDid,
+    });
 
-    // 2. If no profile exists, create a minimal profile.
-    if (!existingProfile) {
-      // TODO: replace with invitation logic.
-      const minimalProfile = {
+    // 2. Create or update the profile
+    await db('profiles')
+      .insert({
         did: targetUserDid,
-        handle: targetUserDid,
-      };
-      await db('profiles').insert(minimalProfile);
-    }
+        handle: atProtoUserData?.data.handle,
+        avatar: atProtoUserData?.data.avatar,
+        display_name: atProtoUserData?.data.displayName,
+      })
+      .onConflict('did')
+      .merge({
+        handle: atProtoUserData?.data.handle,
+        avatar: atProtoUserData?.data.avatar,
+        display_name: atProtoUserData?.data.displayName,
+      });
 
     // 3. Determine allowed services.
     // Always include "ozone" by default.
@@ -165,7 +170,6 @@ export async function setFeedRole(
     return false;
   }
 }
-
 /**
  * Retrieves moderator profiles for each feed provided.
  * For each feed:
