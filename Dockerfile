@@ -13,7 +13,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 USER node
 COPY . .
-CMD npm run dev
+CMD npm run migrate:up && npm run dev
 
 FROM base AS prodbuilder
 RUN --mount=type=bind,source=package.json,target=package.json \
