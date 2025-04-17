@@ -1,10 +1,10 @@
 // src/controllers/dev.controller.ts
 
-import { Request, Response } from 'express';
-import { AtprotoAgent, getActorFeeds } from '../repos/atproto';
-import { saveProfile } from '../repos/profile';
-import { getProfile } from '../repos/profile';
-import { UserRole } from '../lib/types/permission';
+import { Request, Response } from "express";
+import { AtprotoAgent, getActorFeeds } from "../repos/atproto";
+import { saveProfile } from "../repos/profile";
+import { getProfile } from "../repos/profile";
+import { UserRole } from "../lib/types/permission";
 
 export const devLogin = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -13,12 +13,12 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     if (!accessToken || !profile_did) {
       res
         .status(400)
-        .json({ error: 'Access token and profile_did are required' });
+        .json({ error: "Access token and profile_did are required" });
       return;
     }
 
     // 1. Set access token on AtprotoAgent
-    AtprotoAgent.setHeader('Authorization', `Bearer ${accessToken}`);
+    AtprotoAgent.setHeader("Authorization", `Bearer ${accessToken}`);
 
     // 2. Get profile data from Bluesky
     const response = await AtprotoAgent.app.bsky.actor.getProfile({
@@ -26,7 +26,7 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!response.success) {
-      res.status(401).json({ error: 'Invalid access token or DID' });
+      res.status(401).json({ error: "Invalid access token or DID" });
       return;
     }
 
@@ -37,8 +37,8 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
       displayName: response.data.displayName,
       avatar: response.data.avatar,
       // If you store associated, labels, etc. then add them here
-      associated: response.data.associated,
-      labels: response.data.labels,
+      // associated: response.data.associated,
+      // labels: response.data.labels,
     };
 
     // 4. Also get user's feed generator data from the official Bluesky API, if desired
@@ -49,7 +49,7 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     const initialUser = {
       ...profileData,
       rolesByFeed: createdFeeds.map((feed) => ({
-        role: 'admin' as UserRole,
+        role: "admin" as UserRole,
         uri: feed.uri,
         displayName: feed.displayName,
         feed_name: feed.displayName,
@@ -60,14 +60,14 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     //    (mirroring your normal callback's "saveProfile" usage)
     const success = await saveProfile(initialUser, createdFeeds);
     if (!success) {
-      throw new Error('Failed to save profile data');
+      throw new Error("Failed to save profile data");
     }
 
     // 6. Retrieve the complete profile after upsert,
     //    so we can fill rolesByFeed or additional data
     const completeProfile = await getProfile(profile_did);
     if (!completeProfile) {
-      throw new Error('Failed to retrieve complete profile');
+      throw new Error("Failed to retrieve complete profile");
     }
 
     // 7. Build a minimal user object to put in the session cookie
@@ -80,10 +80,10 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
     };
 
     // 8. Set a session cookie (less strict settings for dev)
-    res.cookie('session', JSON.stringify(userSessionData), {
+    res.cookie("session", JSON.stringify(userSessionData), {
       httpOnly: true,
       secure: false, // dev
-      sameSite: 'lax', // dev
+      sameSite: "lax", // dev
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -94,10 +94,10 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
       sessionSet: true,
     });
   } catch (error) {
-    console.error('Dev login error:', error);
+    console.error("Dev login error:", error);
     res.status(500).json({
-      error: 'Failed to set up development session',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      error: "Failed to set up development session",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
