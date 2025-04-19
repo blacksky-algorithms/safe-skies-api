@@ -1,0 +1,32 @@
+name: Lint and Format
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: "npm"
+      - name: Install Packages
+        run: npm ci --ignore-scripts
+      - name: Lint
+        run: npm run lint
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: "npm"
+      - name: Install Packages
+        run: npm ci --ignore-scripts
+      - name: Format
+        run: npm run format
