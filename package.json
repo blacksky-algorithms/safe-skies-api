@@ -13,7 +13,7 @@
     "test:e2e": "newman run postman/safe-skies-api.postman_collection.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "prepare": "husky install",
     "migrate:create": "knex migrate:make",
