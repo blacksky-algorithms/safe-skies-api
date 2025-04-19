@@ -1,29 +1,29 @@
-import { Knex } from 'knex';
+import { Knex } from "knex";
 
 // Custom type creation helper
 async function createEnumType(
-  knex: Knex,
-  typeName: string,
-  values: string[]
+	knex: Knex,
+	typeName: string,
+	values: string[],
 ): Promise<void> {
-  const exists = await knex.raw(
-    `
+	const exists = await knex.raw(
+		`
     SELECT 1 FROM pg_type WHERE typname = ?;
   `,
-    [typeName]
-  );
+		[typeName],
+	);
 
-  if (!exists.rows.length) {
-    await knex.raw(`
-      CREATE TYPE ${typeName} AS ENUM (${values.map((v) => `'${v}'`).join(', ')});
+	if (!exists.rows.length) {
+		await knex.raw(`
+      CREATE TYPE ${typeName} AS ENUM (${values.map((v) => `'${v}'`).join(", ")});
     `);
-  }
+	}
 }
 
 // Utility functions helper
 async function createUtilityFunctions(knex: Knex): Promise<void> {
-  // List backups function
-  await knex.raw(`
+	// List backups function
+	await knex.raw(`
     CREATE OR REPLACE FUNCTION list_backups()
     RETURNS TABLE (
         backup_timestamp TEXT,
@@ -44,8 +44,8 @@ async function createUtilityFunctions(knex: Knex): Promise<void> {
     $$ LANGUAGE plpgsql;
   `);
 
-  // Restore from backup function
-  await knex.raw(`
+	// Restore from backup function
+	await knex.raw(`
     CREATE OR REPLACE FUNCTION restore_from_backup(target_timestamp TEXT)
     RETURNS void AS $$
     DECLARE
@@ -137,8 +137,8 @@ async function createUtilityFunctions(knex: Knex): Promise<void> {
     $$ LANGUAGE plpgsql;
   `);
 
-  // Cleanup old backups function
-  await knex.raw(`
+	// Cleanup old backups function
+	await knex.raw(`
     CREATE OR REPLACE FUNCTION cleanup_old_backups(older_than_days INTEGER DEFAULT 30)
     RETURNS void AS $$
     DECLARE
@@ -172,230 +172,230 @@ async function createUtilityFunctions(knex: Knex): Promise<void> {
 }
 
 export async function up(knex: Knex): Promise<void> {
-  // Enable pgcrypto
-  await knex.raw('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
+	// Enable pgcrypto
+	await knex.raw('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
 
-  // Create enum types
-  await createEnumType(knex, 'moderation_action', [
-    'post_delete',
-    'post_restore',
-    'user_ban',
-    'user_unban',
-    'mod_promote',
-    'mod_demote',
-  ]);
+	// Create enum types
+	await createEnumType(knex, "moderation_action", [
+		"post_delete",
+		"post_restore",
+		"user_ban",
+		"user_unban",
+		"mod_promote",
+		"mod_demote",
+	]);
 
-  await createEnumType(knex, 'user_role', ['admin', 'mod', 'user']);
+	await createEnumType(knex, "user_role", ["admin", "mod", "user"]);
 
-  // Create tables
-  await knex.schema.createTable('profiles', (table) => {
-    table.text('did').primary();
-    table.text('handle').notNullable();
-    table.text('display_name');
-    table.text('avatar');
-    table.jsonb('associated');
-    table.jsonb('labels');
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-  });
+	// Create tables
+	await knex.schema.createTable("profiles", (table) => {
+		table.text("did").primary();
+		table.text("handle").notNullable();
+		table.text("display_name");
+		table.text("avatar");
+		table.jsonb("associated");
+		table.jsonb("labels");
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+	});
 
-  await knex.schema.createTable('feed_permissions', (table) => {
-    table.uuid('id').defaultTo(knex.raw('gen_random_uuid()')).primary();
-    table.text('did').notNullable();
-    table.text('uri').notNullable();
-    table.text('feed_name').notNullable();
-    table.specificType('role', 'user_role');
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.text('created_by');
-    table.foreign('did').references('profiles.did').onDelete('CASCADE');
-    table
-      .specificType('allowed_services', 'text[]')
-      .defaultTo(knex.raw(`ARRAY['ozone']::text[]`));
-  });
+	await knex.schema.createTable("feed_permissions", (table) => {
+		table.uuid("id").defaultTo(knex.raw("gen_random_uuid()")).primary();
+		table.text("did").notNullable();
+		table.text("uri").notNullable();
+		table.text("feed_name").notNullable();
+		table.specificType("role", "user_role");
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+		table.text("created_by");
+		table.foreign("did").references("profiles.did").onDelete("CASCADE");
+		table
+			.specificType("allowed_services", "text[]")
+			.defaultTo(knex.raw(`ARRAY['ozone']::text[]`));
+	});
 
-  await knex.schema.createTable('logs', (table) => {
-    table.uuid('id').defaultTo(knex.raw('gen_random_uuid()')).primary();
-    table.text('uri').notNullable();
-    table.text('performed_by').notNullable();
-    table.specificType('action', 'moderation_action').notNullable();
-    table.text('target_post_uri');
-    table.text('target_user_did');
-    table.jsonb('metadata');
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.text('ip_address');
-    table.text('user_agent');
-    table.text('reason');
-    table.specificType('to_services', 'TEXT[]');
-  });
+	await knex.schema.createTable("logs", (table) => {
+		table.uuid("id").defaultTo(knex.raw("gen_random_uuid()")).primary();
+		table.text("uri").notNullable();
+		table.text("performed_by").notNullable();
+		table.specificType("action", "moderation_action").notNullable();
+		table.text("target_post_uri");
+		table.text("target_user_did");
+		table.jsonb("metadata");
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+		table.text("ip_address");
+		table.text("user_agent");
+		table.text("reason");
+		table.specificType("to_services", "TEXT[]");
+	});
 
-  await knex.schema.createTable('report_options', (table) => {
-    table.text('id').primary();
-    table.text('title').notNullable();
-    table.text('description');
-    table.text('reason').notNullable();
-  });
+	await knex.schema.createTable("report_options", (table) => {
+		table.text("id").primary();
+		table.text("title").notNullable();
+		table.text("description");
+		table.text("reason").notNullable();
+	});
 
-  await knex.schema.createTable('moderation_services', (table) => {
-    table.text('value').primary();
-    table.text('label').notNullable();
-    table.text('feed_gen_endpoint');
-  });
+	await knex.schema.createTable("moderation_services", (table) => {
+		table.text("value").primary();
+		table.text("label").notNullable();
+		table.text("feed_gen_endpoint");
+	});
 
-  // Create auth tables
-  await knex.schema.createTable('auth_states', (table) => {
-    table.text('key').primary();
-    table.text('state').notNullable();
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.index('created_at', 'idx_auth_states_created_at');
-  });
+	// Create auth tables
+	await knex.schema.createTable("auth_states", (table) => {
+		table.text("key").primary();
+		table.text("state").notNullable();
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+		table.index("created_at", "idx_auth_states_created_at");
+	});
 
-  await knex.schema.createTable('auth_sessions', (table) => {
-    table.text('key').primary();
-    table.text('session').notNullable();
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.index('created_at', 'idx_auth_sessions_created_at');
-  });
+	await knex.schema.createTable("auth_sessions", (table) => {
+		table.text("key").primary();
+		table.text("session").notNullable();
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+		table.index("created_at", "idx_auth_sessions_created_at");
+	});
 
-  // Enable RLS on auth tables
-  await knex.raw('ALTER TABLE auth_states ENABLE ROW LEVEL SECURITY');
-  await knex.raw('ALTER TABLE auth_sessions ENABLE ROW LEVEL SECURITY');
+	// Enable RLS on auth tables
+	await knex.raw("ALTER TABLE auth_states ENABLE ROW LEVEL SECURITY");
+	await knex.raw("ALTER TABLE auth_sessions ENABLE ROW LEVEL SECURITY");
 
-  // Create RLS policies
-  await knex.raw(`
+	// Create RLS policies
+	await knex.raw(`
     CREATE POLICY "Allow all operations on auth_states" ON auth_states FOR ALL USING (true);
     CREATE POLICY "Allow all operations on auth_sessions" ON auth_sessions FOR ALL USING (true);
   `);
 
-  // Create utility functions
-  await createUtilityFunctions(knex);
+	// Create utility functions
+	await createUtilityFunctions(knex);
 
-  // Seed data
-  await knex('report_options')
-    .insert([
-      {
-        id: 'misleading',
-        title: 'Misleading Post',
-        description: 'Impersonation, misinformation, or false claims',
-        reason: 'REASONMISLEADING',
-      },
-      {
-        id: 'spam',
-        title: 'Spam',
-        description: 'Excessive mentions or replies',
-        reason: 'REASONSPAM',
-      },
-      {
-        id: 'nsfw',
-        title: 'Unwanted Sexual Content',
-        description: 'Nudity or adult content not labeled as such',
-        reason: 'REASONSEXUAL',
-      },
-      {
-        id: 'behavior',
-        title: 'Anti-Social Behavior',
-        description: 'Harassment, trolling, or intolerance',
-        reason: 'REASONRUDE',
-      },
-      {
-        id: 'illegal',
-        title: 'Illegal and Urgent',
-        description: 'Glaring violations of law or terms of service',
-        reason: 'REASONVIOLATION',
-      },
-      {
-        id: 'other',
-        title: 'Other',
-        description: 'An issue not included in these options',
-        reason: 'REASONOTHER',
-      },
-    ])
-    .onConflict('id')
-    .ignore();
+	// Seed data
+	await knex("report_options")
+		.insert([
+			{
+				id: "misleading",
+				title: "Misleading Post",
+				description: "Impersonation, misinformation, or false claims",
+				reason: "REASONMISLEADING",
+			},
+			{
+				id: "spam",
+				title: "Spam",
+				description: "Excessive mentions or replies",
+				reason: "REASONSPAM",
+			},
+			{
+				id: "nsfw",
+				title: "Unwanted Sexual Content",
+				description: "Nudity or adult content not labeled as such",
+				reason: "REASONSEXUAL",
+			},
+			{
+				id: "behavior",
+				title: "Anti-Social Behavior",
+				description: "Harassment, trolling, or intolerance",
+				reason: "REASONRUDE",
+			},
+			{
+				id: "illegal",
+				title: "Illegal and Urgent",
+				description: "Glaring violations of law or terms of service",
+				reason: "REASONVIOLATION",
+			},
+			{
+				id: "other",
+				title: "Other",
+				description: "An issue not included in these options",
+				reason: "REASONOTHER",
+			},
+		])
+		.onConflict("id")
+		.ignore();
 
-  await knex('moderation_services')
-    .insert([
-      {
-        value: 'blacksky',
-        label: 'Blacksky Moderation Service',
-        feed_gen_endpoint: null,
-      },
-      {
-        value: 'ozone',
-        label: 'Ozone Moderation Service',
-        feed_gen_endpoint: null,
-      },
-    ])
-    .onConflict('value')
-    .ignore();
+	await knex("moderation_services")
+		.insert([
+			{
+				value: "blacksky",
+				label: "Blacksky Moderation Service",
+				feed_gen_endpoint: null,
+			},
+			{
+				value: "ozone",
+				label: "Ozone Moderation Service",
+				feed_gen_endpoint: null,
+			},
+		])
+		.onConflict("value")
+		.ignore();
 }
 
 export async function down(knex: Knex): Promise<void> {
-  const timestamp = new Date().toISOString().replace(/[-T:]|\.\d{3}Z$/g, '');
+	const timestamp = new Date().toISOString().replace(/[-T:]|\.\d{3}Z$/g, "");
 
-  // Backup all tables including auth tables
-  const tablesToBackup = [
-    'moderation_services',
-    'report_options',
-    'logs',
-    'feed_permissions',
-    'profiles',
-    'auth_states',
-    'auth_sessions',
-  ];
+	// Backup all tables including auth tables
+	const tablesToBackup = [
+		"moderation_services",
+		"report_options",
+		"logs",
+		"feed_permissions",
+		"profiles",
+		"auth_states",
+		"auth_sessions",
+	];
 
-  for (const table of tablesToBackup) {
-    await knex.raw(
-      `CREATE TABLE ${table}_backup_${timestamp} AS TABLE ${table}`
-    );
-  }
+	for (const table of tablesToBackup) {
+		await knex.raw(
+			`CREATE TABLE ${table}_backup_${timestamp} AS TABLE ${table}`,
+		);
+	}
 
-  // Also backup indexes for auth tables
-  await knex.raw(`
+	// Also backup indexes for auth tables
+	await knex.raw(`
     CREATE INDEX idx_auth_states_backup_${timestamp}_created_at 
     ON auth_states_backup_${timestamp}(created_at)
   `);
-  await knex.raw(`
+	await knex.raw(`
     CREATE INDEX idx_auth_sessions_backup_${timestamp}_created_at 
     ON auth_sessions_backup_${timestamp}(created_at)
   `);
 
-  // Create and populate enum_backups table
-  await knex.schema.createTableIfNotExists('enum_backups', (table) => {
-    table.text('backup_timestamp');
-    table.text('enum_name');
-    table.specificType('enum_values', 'TEXT[]');
-    table.timestamp('created_at').defaultTo(knex.fn.now());
-  });
+	// Create and populate enum_backups table
+	await knex.schema.createTableIfNotExists("enum_backups", (table) => {
+		table.text("backup_timestamp");
+		table.text("enum_name");
+		table.specificType("enum_values", "TEXT[]");
+		table.timestamp("created_at").defaultTo(knex.fn.now());
+	});
 
-  // Backup enum values
-  await knex.raw(
-    `
+	// Backup enum values
+	await knex.raw(
+		`
     INSERT INTO enum_backups (backup_timestamp, enum_name, enum_values)
     VALUES 
     (?, 'user_role', ARRAY(SELECT unnest(enum_range(NULL::user_role)::text[]))),
     (?, 'moderation_action', ARRAY(SELECT unnest(enum_range(NULL::moderation_action)::text[])))
   `,
-    [timestamp, timestamp]
-  );
+		[timestamp, timestamp],
+	);
 
-  // Drop utility functions
-  await knex.raw('DROP FUNCTION IF EXISTS cleanup_old_backups(INTEGER)');
-  await knex.raw('DROP FUNCTION IF EXISTS restore_from_backup(TEXT)');
-  await knex.raw('DROP FUNCTION IF EXISTS list_backups()');
+	// Drop utility functions
+	await knex.raw("DROP FUNCTION IF EXISTS cleanup_old_backups(INTEGER)");
+	await knex.raw("DROP FUNCTION IF EXISTS restore_from_backup(TEXT)");
+	await knex.raw("DROP FUNCTION IF EXISTS list_backups()");
 
-  // Drop tables in reverse order
-  await knex.schema
-    .dropTableIfExists('auth_sessions')
-    .dropTableIfExists('auth_states')
-    .dropTableIfExists('moderation_services')
-    .dropTableIfExists('report_options')
-    .dropTableIfExists('logs')
-    .dropTableIfExists('feed_permissions')
-    .dropTableIfExists('profiles');
+	// Drop tables in reverse order
+	await knex.schema
+		.dropTableIfExists("auth_sessions")
+		.dropTableIfExists("auth_states")
+		.dropTableIfExists("moderation_services")
+		.dropTableIfExists("report_options")
+		.dropTableIfExists("logs")
+		.dropTableIfExists("feed_permissions")
+		.dropTableIfExists("profiles");
 
-  // Drop enum types
-  await knex.raw('DROP TYPE IF EXISTS user_role');
-  await knex.raw('DROP TYPE IF EXISTS moderation_action');
+	// Drop enum types
+	await knex.raw("DROP TYPE IF EXISTS user_role");
+	await knex.raw("DROP TYPE IF EXISTS moderation_action");
 
-  // Log backup timestamp
-  console.log(`Backup created with timestamp: ${timestamp}`);
+	// Log backup timestamp
+	console.log(`Backup created with timestamp: ${timestamp}`);
 }
