@@ -5,9 +5,9 @@
  */
 
 export async function up(): Promise<void> {
-  // No operation needed.
+	// No operation needed.
 }
 
 export async function down(): Promise<void> {
-  // No rollback necessary.
+	// No rollback necessary.
 }

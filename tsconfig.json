@@ -1,22 +1,22 @@
 {
-  "compilerOptions": {
-    "target": "ES2020", // Emit code targeting ES2020
-    "module": "CommonJS", // Use CommonJS module system (for Node)
-    "rootDir": ".", // Set the root directory to the project root
-    "outDir": "dist", // Emit compiled files to the "dist" folder
-    "strict": true, // Enable all strict type-checking options
-    "esModuleInterop": true, // Emit additional code for compatibility with CommonJS modules
-    "skipLibCheck": true, // Skip type checking of declaration files
-    "forceConsistentCasingInFileNames": true, // Enforce consistent casing in imports
-    "baseUrl": ".", // Set the base directory for non-relative module names
-    "paths": {
-      "@/*": ["src/*"] // Allow import aliases like "@/someModule" to refer to "src/someModule"
-    }
-  },
-  "include": [
-    "src", // Include all files in the src folder
-    "knexfile.ts", // Include knexfile.ts from the root
-    "migrations/**/*.ts" // Include all migration files
-  ],
-  "ignore": ["dist"]
+	"compilerOptions": {
+		"target": "ES2020", // Emit code targeting ES2020
+		"module": "CommonJS", // Use CommonJS module system (for Node)
+		"rootDir": ".", // Set the root directory to the project root
+		"outDir": "dist", // Emit compiled files to the "dist" folder
+		"strict": true, // Enable all strict type-checking options
+		"esModuleInterop": true, // Emit additional code for compatibility with CommonJS modules
+		"skipLibCheck": true, // Skip type checking of declaration files
+		"forceConsistentCasingInFileNames": true, // Enforce consistent casing in imports
+		"baseUrl": ".", // Set the base directory for non-relative module names
+		"paths": {
+			"@/*": ["src/*"] // Allow import aliases like "@/someModule" to refer to "src/someModule"
+		}
+	},
+	"include": [
+		"src", // Include all files in the src folder
+		"knexfile.ts", // Include knexfile.ts from the root
+		"migrations/**/*.ts" // Include all migration files
+	],
+	"ignore": ["dist"]
 }

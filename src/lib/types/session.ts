@@ -1,8 +1,8 @@
-import { FeedRoleInfo } from './permission';
+import { FeedRoleInfo } from "./permission";
 
 export interface SessionPayload {
-  did: string;
-  handle: string;
-  displayName?: string;
-  rolesByFeed?: FeedRoleInfo[];
+	did: string;
+	handle: string;
+	displayName?: string;
+	rolesByFeed?: FeedRoleInfo[];
 }
