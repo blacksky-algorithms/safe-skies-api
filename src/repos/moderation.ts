@@ -1,6 +1,6 @@
-import { db } from '../config/db';
-import { ReportOption, ModerationService } from '../lib/types/moderation';
-import NodeCache from 'node-cache';
+import { db } from "../config/db";
+import { ReportOption, ModerationService } from "../lib/types/moderation";
+import NodeCache from "node-cache";
 
 // Create a cache instance with a TTL of 5 minutes (300 seconds)
 const configCache = new NodeCache({ stdTTL: 300 });
@@ -10,66 +10,66 @@ const configCache = new NodeCache({ stdTTL: 300 });
  * The configuration includes custom fields like admin_did.
  */
 export async function getModerationServicesConfig(): Promise<
-  ModerationService[]
+	ModerationService[]
 > {
-  // Check if the config is already cached.
-  const cached = configCache.get<ModerationService[]>('moderationServices');
-  if (cached) {
-    return cached;
-  }
+	// Check if the config is already cached.
+	const cached = configCache.get<ModerationService[]>("moderationServices");
+	if (cached) {
+		return cached;
+	}
 
-  // Otherwise, query the database.
-  try {
-    const services: ModerationService[] = await db(
-      'moderation_services'
-    ).select('*');
-    // Cache the result.
-    configCache.set('moderationServices', services);
+	// Otherwise, query the database.
+	try {
+		const services: ModerationService[] = await db(
+			"moderation_services",
+		).select("*");
+		// Cache the result.
+		configCache.set("moderationServices", services);
 
-    return services;
-  } catch (error) {
-    console.error('Error fetching moderation services config:', error);
-    throw error;
-  }
+		return services;
+	} catch (error) {
+		console.error("Error fetching moderation services config:", error);
+		throw error;
+	}
 }
 
 export async function fetchReportOptions(): Promise<ReportOption[]> {
-  try {
-    return await db('report_options');
-  } catch (error) {
-    console.error('Error fetching report options:', error);
-    throw error;
-  }
+	try {
+		return await db("report_options");
+	} catch (error) {
+		console.error("Error fetching report options:", error);
+		throw error;
+	}
 }
 
 export async function reportToBlacksky(uris: { uri: string }[]) {
-  try {
-    const response = await fetch(
-      `${process.env.RSKY_FEEDGEN}/queue/posts/delete`!,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-RSKY-KEY': process.env.RSKY_API_KEY!,
-        },
-        body: JSON.stringify(uris),
-      }
-    );
+	try {
+		const response = await fetch(
+			`${process.env.RSKY_FEEDGEN}/queue/posts/delete`!,
+			{
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+					"X-RSKY-KEY": process.env.RSKY_API_KEY!,
+				},
+				body: JSON.stringify(uris),
+			},
+		);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
 
-    return await response;
-  } catch (error) {
-    console.log({ error });
-    console.error('Error:', error);
-    throw error;
-  }
+		return await response;
+	} catch (error) {
+		console.log({ error });
+		console.error("Error:", error);
+		throw error;
+	}
 }
 
 export async function reportToOzone() {
-  // todo
+	// todo
 }
 
 /**
@@ -81,29 +81,29 @@ export async function reportToOzone() {
  * @returns An array of ModerationService objects.
  */
 export async function fetchModerationServices(
-  feedUri: string
+	feedUri: string,
 ): Promise<ModerationService[]> {
-  try {
-    // Retrieve all services from the moderation_services table.
+	try {
+		// Retrieve all services from the moderation_services table.
 
-    const services: ModerationService[] = await db(
-      'moderation_services'
-    ).select('*');
-    // Assuming that the feed_permissions table stores allowed_services as a text array.
-    const feed = await db('feed_permissions')
-      .select('allowed_services')
-      .where({ uri: feedUri })
-      .first();
+		const services: ModerationService[] = await db(
+			"moderation_services",
+		).select("*");
+		// Assuming that the feed_permissions table stores allowed_services as a text array.
+		const feed = await db("feed_permissions")
+			.select("allowed_services")
+			.where({ uri: feedUri })
+			.first();
 
-    // Filter the services to include only those allowed for the given feed.
-    return services.filter((service) =>
-      feed.allowed_services.includes(service.value)
-    );
+		// Filter the services to include only those allowed for the given feed.
+		return services.filter((service) =>
+			feed.allowed_services.includes(service.value),
+		);
 
-    // If no feedUri is provided or if allowed_services is not set, return all services.
-    // return services;
-  } catch (error) {
-    console.error('Error fetching moderation services:', error);
-    throw error;
-  }
+		// If no feedUri is provided or if allowed_services is not set, return all services.
+		// return services;
+	} catch (error) {
+		console.error("Error fetching moderation services:", error);
+		throw error;
+	}
 }
