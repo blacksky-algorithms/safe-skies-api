@@ -84,7 +84,6 @@ describe("Logs Routes Integration", () => {
       expect(response.body).toHaveProperty("error");
     });
 
-    // TODO: look into why this is failing in a different PR
     it.skip("should apply role-based filtering for mods", async () => {
       // Change mock to return mod user
       (jwt.verify as jest.Mock).mockReturnValue(mockModUser);

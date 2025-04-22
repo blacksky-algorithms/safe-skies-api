@@ -1,41 +1,11 @@
-// import { setupPermissionsMocks } from "../../mocks/permissions.mocks";
 import { customServiceGate } from "../../../src/repos/permissions";
-// import { mockServicesConfig } from "../../fixtures/moderation.fixtures";
-
-// setupPermissionsMocks();
-
-export const mockServicesConfig = [
-  {
-    value: "ozone",
-    label: "Ozone",
-    feed_gen_endpoint: null,
-    admin_did: "admin1",
-  },
-  {
-    value: "custom",
-    label: "Custom Service",
-    feed_gen_endpoint: "http://example.com",
-    admin_did: "admin2",
-  },
-  {
-    value: "blacksky",
-    label: "Blacksky Moderation Service",
-    feed_gen_endpoint: "http://example.com",
-    admin_did: "did:plc:w4xbfzo7kqfes5zb7r6qv3rw",
-  },
-];
-
-jest.mock("../../../src/repos/moderation", () => {
-  return {
-    getModerationServicesConfig: jest
-      .fn()
-      .mockResolvedValue(mockServicesConfig),
-  };
-});
+import { setupPermissionsMocks } from "../../mocks/permissions.mocks";
 
 describe("customServiceGate using default mocks", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetModules();
+    // This will mock getModerationServicesConfig to return the default mockServicesConfig.
+    setupPermissionsMocks();
   });
 
   it("should return false if service is not found in the configuration", async () => {
@@ -46,7 +16,6 @@ describe("customServiceGate using default mocks", () => {
     expect(result).toBe(false);
   });
 
-  // TODO: Mocks need to be adjusted, some tests are still hitting the database instead of being mocked
   it.skip('should return true if feedUri includes admin_did for the "custom" service', async () => {
     // In mockServicesConfig, the "custom" service has admin_did of "admin2".
     const feedUri =

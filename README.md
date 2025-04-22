@@ -227,8 +227,6 @@ Getting the entire backend running with docker takes a few steps:
 docker compose up -d
 ```
 
-If you don't have Docker installed you can proceed with the steps below. If you would like to try running the server with Docker you can [install it here](https://www.docker.com/)
-
 ## Running the Server (without Docker)
 
 The server can be run in different modes:
@@ -277,8 +275,8 @@ This setup allows OAuth providers to redirect back to your local development env
 - `npm run test:watch`: Runs tests in watch mode.
 - `npm run test:coverage`: Runs tests with coverage report.
 - `npm run test:e2e`: Runs Postman collection tests using Newman.
-- `npm run lint`: Runs ESLint for code quality.
-- `npm run format`: Formats code using Prettier.
+- `npm run lint`: Runs Biome for code quality.
+- `npm run format`: Formats code using Biome.
 - `npm run migrate:create`: Creates a new migration file.
 - `npm run migrate:up`: Runs pending migrations.
 - `npm run migrate:down`: Rolls back the most recent migration.
@@ -461,7 +459,7 @@ npm run test:coverage
 - **TypeScript**: Static typing.
 - **Jest & Supertest**: Testing.
 <!-- - **Newman**: Command-line collection runner for Postman. -->
-- **ESLint & Prettier**: Code quality.
+- **Biome**: Code quality.
 - **Husky**: Git hooks for code quality.
 - **Zod**: TypeScript-first schema validation.
 
